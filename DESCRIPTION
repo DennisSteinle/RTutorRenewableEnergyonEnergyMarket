@@ -1,0 +1,10 @@
+Package: RTutorRenewableEnergyonEnergyMarket
+Type: Package
+Title: The impacts of Renewable Energy on Electricity Market: An interactive analysis with R
+Version: 0.1
+Date: 2022-03-01
+Author: Dennis Steinle
+Maintainer: Dennis Steinle <dennis.steinle@uni-ulm.de>
+Description: The impacts of Renewable Energy on Electricity Market: An interactive analysis with R
+License:Problem set content: Creative Commons (CC BY-SA) Package code: GPL >= 2.0
+Depends: RTutor

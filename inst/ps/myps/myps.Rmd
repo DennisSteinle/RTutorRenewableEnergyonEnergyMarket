@@ -1,0 +1,2069 @@
+
+```{r 'check_ps', include=FALSE}
+
+user.name = 'ENTER A USER NAME HERE'
+```
+
+
+
+# The impacts of Renewable Energy on Electricity Market:
+# An interactive analysis with R
+
+Author: Dennis Steinle
+
+
+## Exercise Overview
+
+
+Hello and welcome to this interactive problem set.
+
+Nowadays a central and interesting question for discussion is global warming and the problem with limited resources of fossil fuels. Looking at this part of political topics, the first solar cells have been installed in the USA in the 1950s. The project of energy generation by the wind started already at the end of the 19th century. But at the beginning of the 21st century, a big focus was directed to renewable energy and how you could use them to create a new sector with the option to produce electricity without limited fuels. 
+
+„The future is green energy, sustainability and renewable energy“(Schwarzenegger, A.) 
+
+The preceding quote of Arnold Schwarzenegger defines his mission during his tenure of office as governor. One of his central goals was the reduction of global greenhouse gas emissions and of course the expansion of renewable energies. Therefore, the state should spend about 14 Million Dollars of tax savings. Another reason for the expansion of renewable generation was the dependence on imports (22 percent in 2006). Also, the generation of energy by thermal fuels consisted to a large extent of thermal fuels. All these factors are the origin of the new political concepts. The impact of renewable energy on conventional generation is really important. That´s why we want to analyze this impact in the following Problem set.
+
+This analysis is based on the text *SETTING WITH THE SUN: THE IMPACTS OF RENEWABLE ENERGY ON WHOLESALE POWER MARKETS* by Bushnell James and Novan Kevin (2018). To get the whole article you can load the paper <a href="https://www.journals.uchicago.edu/doi/full/10.1086/713249" target="_blank">from this website</a>. 
+
+The working paper demonstrates in which cases renewable energy impacts conventional generation. In detail, there will be a model which shows that the increase of renewable production causes a higher wholesale price of energy. We will also see that more renewable energy generation concludes a different composition of the conventional electricity mix. Furthermore, they explain the long run impacts of renewable expansions. Earlier papers for example *The merit-order effect: A detailed analysis of the price effect of renewable electricity generation on spot market prices in Germany* by Sensfuß Frank, Ragwitz Mario and Genoese Massimo (2008) or *Measuring the Environmental Benefits of Wind-Generated Electricity* by Joseph Cullen (2013) show that the increase of renewable capacities causes the decrease of conventional reserves and the decline in investment in power sources like nuclear or thermal, as well as the fast decrease of the wholesale energy price when wind or solar power generators produce with full capacities.
+
+In part 1 of this RTutor Problem set, you´re going to get a quick overview of the dataset. You will learn how much energy is produced by the different generation methods. Also, you can focus on the evolution of conventional and renewable electricity. In addition, the descriptive part shows the development of solar and wind capacities, just as the wholesale price in the years 2013 and 2016 during different times of the day.
+
+In the second part of this working sheet, we will create a (multiple) linear regression model, to estimate the causal effects between generation by wind and solar and the wholesale electricity price. We will start by suggesting simple linear models and work our way towards more complex approaches. There, we will include some variables to control the model to remove biased estimates. Afterward, we´re going to discuss our results and make a summary of the impact of renewable energy on the current conventional generation methods. In the end, our model will be adapted to show the causal effects between our explanatory variables and the different types of gas production.
+
+While you´re going to solve these exercises, you can learn lots of skills and facts like R coding, different regression models and the relationship between weather, production of wind, and solar energy, as well as conventional electricity like nuclear, gas, or thermal generation. 
+To start with this interactive worksheet, you should have some basic foreknowledge of the basic R functions (`dplyr`, `tidyverse`, `ggplot2`, or `kableExtra`). If there exist some difficult parts of coding; information boxes and hints may help.
+
+Before starting with the content-related concepts, you get an overview of the different topics and tasks.
+
+
+## Content  
+
+
+1 - How an RTutor Problem set works
+
+2 - Data Analysis
+
+3 - Visualisation of Energy Generation
+
+4 - Development of Hourly Energy Generation and Trend of Prices 
+
+5 - First Empirical Model
+
+6 - Price Change at Different Hours
+
+7 - Impact on Gas Power Plants
+
+8 - Impact of Wind and Solar on Energy Generation
+
+9 - Seasonal Effects
+
+10 - Robustness Checks for Curtailments
+
+11 - Discussion and Conclusion
+
+12 - References
+
+
+## Exercise 1 --  How an RTutor Problem set works
+
+To learn a lot about the central topic you will work through different exercises, in which you may solve code chunks, multiple-choice questions, or other comprehension tasks. 
+The central aspects will be shown in the form of:
+
+-	`Quizzes:` There you can test your understanding and knowledge about the central concepts, or mostly the interpretation of the results of different linear regressions.
+
+-	`Info Boxes:` contains additional data of interesting facts, supplementary information, or the central background context of basic R functions.
+
+-	`Code Chunks:` You will solve many Code Chunks while you complete small code snippets: Here exist some extra buttons you should know how they work:
+
+
+-	`Run Chunk:` Code is executed without checking for correctness.
+
+-	`Check:` Works similiar to „Run Chunk“, but checks if everything is correct.
+
+-	`Solution:` This part shows the whole solution of the code chunk.
+
+-	`Edit:` Before starting a new exercise sometimes the Code Chunk isn´t already active. To start the code chunk you just press „Edit“.
+
+-	`Hint:` When you don´t know, how to solve the exercise, you can press hint to get helpful information and useful tips.
+
+-	`Data:` These buttons guide you to the data browser, where you can view at your data.
+
+
+In a few cases, you have to solve code blocks to run the chunk, if you can´t handle this successfully you will be able to start new tasks. The box „Go to next exercise“ or the bar at the top of the screen could help you.
+
+## Exercise 2 -- Data Analysis
+
+In exercise 2 you get some information and interesting insights in the dataset about the electricity, which is produced by wind, solar or nuclear. Also, we create some tables with the information on the average hourly generation by different methods.
+
+First of all, we want to observe the data, which is part of the dataset from the <a href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/6XQZ3L" target="_blank"> Harvard Dataverse website</a>. 
+
+In this task, we need the file `exercise_analyse.rds`. The abbreviation shows that you deal with an `R-file`. To read these sorts of file you don´t have to install or load any extra package. Before starting with reading, you can inform yourself about this package in the following infobox.
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("readRDS")
+```
+
+
+Quiz: What do you think, how many different variables does our whole dataset have?
+
+[1]: 2
+[2]: 20
+[3]: 37
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Data overview")
+```
+
+After you have read in the dataset, it is most helpful to get a quick overview of the variables, the count of observations, and if there exist any column names.
+
+Therefore, we often use the `head()` function. In our situation, we are interested in the first 10 observations. To run this call, you first have to name the variable name, where you saved your dataset. As the second argument you must insert the number of rows you want to view, in our case it is a 10. 
+
+Task: Use the `readRDS()` function to load the file `exercise_analyse.rds` and save the file in the variable called `data`. If there is any problem, use the `hint-button` to get some extra information. Then look at the first 10 lines with `head()`.
+
+
+```{r "3_2"}
+# Fill in the arguments in the first line
+# Then use data and 10 for the head command
+ ___ <- ___("exercise_analyse.rds")
+head(___, ___)
+```
+
+
+There we got 16 different variables, which contains information on for example solar production, day, month, year, or any kind of energy price.
+
+Looking a little closer inside our observation period, we want to know when our experiment has started and ended. In addition, we want to see how many observations our dataset has and at what intervals an observation was created. So what do you think, how long does our experiment last?
+
+
+Quiz: What is the time range of our dataset?
+
+[1]: 6 months
+[2]: 2 years
+[3]: more than 4 years
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Time series")
+```
+
+Now we use the method `range()` to get the beginning and the end of our time series. 
+This function finds the minimum and maximum of our date column.
+
+Task: Use `range()` to calculate the minimum and maximum from the column `date` of our dataset `data`.
+
+
+```{r "3_3"}
+#calculate the min and max with range() of data$date
+```
+
+
+Watching our results, we can observe that the first day of our time series is the 1st of January of 2013. Furthermore, the last date of our observations is the 31st of May of 2017.
+
+Now that you have already got an insight into our dataset with the `head()` command and you know that our observation period is from January 2013 to May 2017, what do you think? 
+
+How many observations contains our dataset in total?
+
+
+Quiz: How many observations has our dataset?
+
+[1]: 54
+[2]: more than 38000
+[3]: around 1600
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Duration of the experiment")
+```
+
+That makes total sense. If you consider that there is an observation for every hour of a day for 4.5 years, you quickly come to the result of more than 38.000 observations.
+
+Task: We also want to calculate the number of observations. Therefore, we use the command `nrow()` to get the absolute number of rows. Just press check.
+
+
+```{r "3_4"}
+nrow(data)
+```
+
+
+As we have already predicted, we can see that our dataset has 38683 observations.
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("tidyr")
+```
+
+Task: Just press check.
+
+
+```{r "3_5"}
+library(tidyr)
+
+data_long <- pivot_longer(data, cols = -c(renewables, date, year, month, day, hour, price, gas_price, load), names_to = "source", values_to = "value")
+
+head(data_long, 12)
+```
+
+
+
+Quiz: How many observations has our dataset now?
+
+[1]: 5500
+[2]: about 38000
+[3]: around 271000
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Number of observations")
+```
+
+Now, we brought our dataset into a long format. We create a column `source` with the names of our different methods to produce energy like `solar`, `wind`, `renewable`, `hydro`, `thermal`, `nuclear`, or `imports`. The column `value` contains the produced quantities for each hour of the day. So we have our own observation for every method of energy generation for every hour of the experiment.
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("dplyr")
+```
+
+Now we create 2 columns of our dataset with the command `summarise()`. There, we calculate the average production and the standard deviation of each generation form. 
+
+Task: Group our data by `source`. After calculating the `mean-` and `sd-`values with `summarise()` we save our observations in the variable `table`. Use `head()` and `table` to get an overview of the table.
+
+
+```{r "3_7"}
+library(dplyr)
+table <- data_long %>%
+  group_by(___) %>%
+  summarise(mean = round(mean(value, na.rm = T), 2), sd = round(sd(value, na.rm = T), 2)) 
+head(___)
+```
+
+
+In the `summarise()` command we use a function in function. First, we calculate the mean or standard deviation of energy generation, while we just want to use the rows, where the values are not `NA` (na.rm=T). The outer function rounds our result for 2 decimal places.
+
+
+The most energy is produced by thermal followed by net imports and nuclear. Through the period from 2013 till 2017, renewable energy resources generated the lowest amount of electricity. But when we look at the column of standard deviation, we can see that the proportional percentage in comparison to the average production of wind and solar production has the largest fluctuation. This could have two reasons. On the one hand, it could be traced back to the diverse generation. While solar systems just produce during daylight, wind turbines are working when the wind is blowing. 
+
+In contrast, the machines, which manufacture conventional energy, could work the whole day, provided they have enough resources. 
+Another reason could be the increase in the capacities of solar cells and wind turbines in our time series. 
+
+To find the real reasons, we are going to create plots and tables, which show the development of energy production from each power source for the years 2013 to 2016.
+
+
+## Exercise 3 -- Visualisation of Energy Generation
+
+First, we import our dataset again and save the file in `data`.
+
+Task: Read the dataset `exercise_3.rds` again and save the file in `data`. Take a look at the first 10 rows with `head()`. 
+
+
+```{r "4_1"}
+# use readRDS() and read exercise_3.rds
+# head(___,___)
+```
+
+
+In the continues section, we need the library `dplyr`, which we already used in the first parts of our RTutor Problem set and `ggplot2`.
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("ggplot2")
+```
+
+### Development of Energy Generation
+
+
+
+Quiz: Does electricity production by solar increase steadily over the years?
+
+[1]: Yes.
+[2]: No.
+[3]: No, but wind generation.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Development")
+```
+
+First of all, we want to plot the course of the average hourly amount of wind and solar for each day. We look at the period from January 2013 to December 2014. Each data point symbolizes one day. We start with the plot for solar power generation.
+
+Task: Just press check.
+
+
+```{r "4_2"}
+library(ggplot2)
+library(dplyr)
+data_info <- data %>%
+  group_by(year, month, day) %>%
+  summarise(mean_solar = mean(solar), mean_wind = mean(wind), date = first(date))
+  
+data_plot <- data_info %>%
+  filter(year == 2013 | year == 2014) %>%
+  ggplot(aes(x = date, y = mean_solar)) + 
+  geom_point(color = "darkblue") +
+  labs(x="January 2013 to December 2014", y="Generation in MWh",color="Legend: ",
+  title="Average hourly solar generation") +
+  theme_bw()
+plot(data_plot)
+```
+
+
+Here, we can see, that the level of solar generation grows between 2013 and 2014. In the following tasks, we will analyse the exact values.
+
+Now it´s your turn, we want to create the same plot for wind generation. You just have to fill in the gaps.
+
+Task: Create a plot for the daily wind generation in 2013 and 2014. Filter your dataset for year equal to `2013` or `2014`. Show `date` on the x-Axis and `mean_wind` on the y-Axis. We want `green` points. Save your graphic in `data_plot` and show it.
+
+
+```{r "4_3"}
+data_plot <- data_info %>%
+  filter(year == ___ | year == ___) %>%
+  ggplot(aes(x = ___, y = ___)) + 
+  geom_point(color = "___") +
+  labs(x="January 2013 to December 2014", y="Generation in MWh",color="Legend: ",
+  title="Average hourly wind generation") +
+  theme_bw()
+plot(___)
+```
+
+
+Although we could guess the approximate course, we can´t make any exact statements. Wind generation grows in summer, but we can´t say if wind generation is on a higher level in 2013 or 2014.
+
+That's why we bring our dataset back into the long format, group the data by month, year, and the new column `source`. Finally, we look at the average produced values for solar and wind generation.
+
+Again, we take our columns `nuclear`, `thermal`, `imports`, `hydro`, `solar`, `wind`, and `renewables`. We create the column `source` with the names of the generation methods and `value` with the amount of generated energy. Then, we view our new dataset `data_long`.
+
+Task: Just press check.
+
+
+```{r "4_4"}
+
+library(tidyr)
+data_long <- pivot_longer(data, cols = -c(renewables, date, year, month, day, dailysolar, dailywind), names_to = "source", values_to = "value")
+head(data_long)
+
+```
+
+
+Now that our dataset is in long format, we group our data by `source`, `year`, and `month` and calculate the `average` quantities produced per month. We finally have the columns which we need for our plot: `date`, `source`, `average`, `year`, and `month`.
+
+Task: Group our values by `year`, `month`, and `source`. After calculating the average values, we create a column with the first day of the column `date`. Then take a look at the dataset with `head()`.
+
+
+```{r "4_5"}
+library(dplyr)
+data_plot <- data_long %>%
+  group_by(___, ___, ___) %>%
+  summarize(
+    date = first(date), 
+    average = mean(value, na.rm=T)
+  )
+
+head(___)
+```
+
+
+Before we create the plot, it´s your turn. Renewable energy generation is really important and there exist many different forms of it. Most people think that solar generation is the best method, but is it also the method with the biggest increased production in the last years?
+
+
+Quiz: What do you think? Has solar power the highest increase of all sources?
+
+[1]: Yes.
+[2]: No.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Power of solar generation")
+```
+
+Task: Going on, we want to plot our average values of generation. Therefore, we plot `date` on the x-Axis and `average` on the y-Axis. Set color equal to `source` and save your plot in the variable `plot`. Finally, plot your graphic.
+
+
+```{r "4_6",fig.width=10, fig.height=7}
+
+___ <- data_plot %>%
+  ggplot(aes(x = ___, y = ___)) +
+  geom_line(aes(color = ___)) +
+  facet_wrap(vars(source), scales = "free", nrow = 2)
+plot(___)
+
+```
+
+
+
+Quiz: What can you observe?
+
+[1]: Renewable energies are falling and conventional power generation remains constant.
+[2]: Renewable energies are generally increasing and conventional power generation is decreasing.
+[3]: Renewable energies and conventional power generation are increasing.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Energy")
+```
+
+
+
+Quiz: From 2013 to 2016 the amount of renewable energy is increasing.
+
+[1]: Yes.
+[2]: No.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Development of renewable energy")
+```
+
+### Annual Development
+
+Task: The last exercise we will do in number 3 is to calculate the average values spread over the years. As before, we take our dataset `data_long` and group the observations by `year` and `source`. Afterward, we calculate the average of `value` and save the rest in `data_year`. At least, we view it with `head()`.
+
+
+```{r "4_7"}
+___ <- data_long %>%
+  group_by(___, ___) %>%
+  summarise(average = mean(___, na.rm = T)) 
+head(data_year)
+```
+
+
+What do you think, how strong will solar energy production increase on average between 2013 and 2017?
+
+
+Quiz: On which level does the renewable energy production by solar grow?
+
+[1]: 1.5 times
+[2]: 3 times
+[3]: more than 4 times
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Extent of increase")
+```
+
+
+At least, we create the bar plots. We plot `year` on the x-Axis and `average` on the y-Axis. Furthermore, we set fill equal to `source` and insert an own scale for every graphic.
+
+Task: Just press check.
+
+
+```{r "4_8",fig.width=10, fig.height=7}
+plot <- data_year %>%
+  ggplot(aes(x = year, y = average)) +
+  geom_col(aes(fill = source)) +
+  facet_wrap(vars(source), scales = "free", nrow = 2)
+
+plot(plot)
+
+```
+
+
+These plots show us the tendency, which development arises over the years and give us a basis for prognoses of future development. Of course, it is important to say, that we just can make a partial forecast for the year 2017. In 2017 we just have the dates until the 31st of May, while the numbers for the rest of the year are missing so far. Nevertheless, we can talk about the yearly development from 2013 to 2016 and which impact renewable energy generation could have on conventional production.
+
+Especially solar generation has a constant increase over the whole period. 
+Other renewables and hydro have been steadily increasing since 2014 respectively 2015. We can also see a strong increase in wind power at least until the end of 2016, whereby in 2017 it must be taken into account that the windy months will follow in autumn, which is why an increase is also expected for 2017.
+
+Looking at the conventional generation, we observe that nuclear power has a fluctuating course, and also beyond 2017, a decline in nuclear power production will be expected here.
+Finally, we take a look at thermal generation. Here, we see the clearest progression. From 2013 to 2017, this form of electricity production has decreased most significantly. That´s why a further decline is expected in the future, which will converge towards 0 in the following 10 to 15 years.
+
+In 2016 we can see that California produces more solar power than nuclear energy. This will be a hint for the future. In every country, global warming and limited fossil fuels are big problems. That is why every single government develops a concept to solve the problem. One point is the shift from conventional generation to renewable energy resources. Beyond 2016 and 2017 we predict a significantly higher level of power from wind, solar, biomass, or hydro.
+
+Going on, we want to examine the direct impact of solar and wind generation on the conventional energy sources, the energy price, and if we need to involve other factors, which manipulates the relationship between our observed variables.
+
+
+
+## Exercise 4 -- Development of Hourly Energy Generation and Trend of Prices
+
+The last chapter showed us the modifications of the energy generations. The most important point was that the state of California increased the production of renewable power. As a result, the generation of conventional energy went back. For now, we want to find out how much electricity is generated at different times of the day. 
+
+Therefore, we filter our dates for the years 2013 and 2016. In the working paper, which is the base of my working exercise, the authors took the years 2012 and 2016 for comparison, but the dataset I used for the replication has no data information for the year 2012. That´s why I made this study for 2013 and 2016. After filtering for years, we generate new columns with the average generated power for solar and wind by hours, as well as the average load and the average RTM price for each hour.
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Variable Declaration")
+```
+
+Again, we reread our dataset now which contains some more relevant variables for a deeper analysis, and watch the first 10 rows of it. This time our dataset is already in the `long format`.
+
+Task: Just press check.
+
+
+```{r "5_1"}
+
+data <- readRDS("exercise_4.rds")
+head(data,10)
+
+```
+
+
+Task: In the first task we want to generate the average values for the years 2013 and 2016. The first thing you have to do is to group the dataset by `year`, `hour` and `source`. Then we use the command `summarise` to calculate the average values of the variable `value` and round them for 2 decimal places. Finally, save the results in the variable `data_avg` and use the command `head()` for watching.
+
+
+```{r "5_2"}
+
+library(dplyr)
+ data_avg <- data %>%
+   group_by(___, ___, ___) %>%
+   summarise(mean = round(mean(___, na.rm = T),2))
+
+head(data_avg)
+
+
+```
+
+
+After calculating all relevant values, we can go on and create our plots, which contain information on the average hourly generated solar or wind power, or on the average hourly load respectively price. The focus of the elaboration is the change and impact of renewable energy on conventional power. That´s why we start to plot the overall average hourly solar energy generation for each hour of the day in 2013 and 2016. The idea behind these plots is the development of generated power between 2013 and 2016 spread over the day. There we can see if there are values that differ significantly between the years.
+
+
+### Solar generation in 2013 and 2016
+
+
+
+Quiz: What do you think, at what time is the biggest difference in electricity production by solar?
+
+[1]: 5am
+[2]: 1pm
+[3]: 6pm
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Daily solar production")
+```
+
+Task: Create a new plot for average hourly solar. Plot `hour` on the x-Axis and `mean` on the y-Axis. Set the color equal to `year`. Draw boundary points for each hour and plot your graphic. You can conduct the `help()` function. 
+
+
+```{r "5_3"}
+library(ggplot2)
+data_plot_solar <- data_avg %>%
+  filter(source == "solar") %>%
+  ggplot(aes(x = ___, y = ___)) + 
+  geom_point(aes(color = as.factor(___))) +
+  scale_x_discrete(limits = 1:24) +
+  geom_path(aes(color = as.factor(year))) +
+  theme_minimal() +
+  labs(x="Hour", y="Solar generation in MWh",
+  title="Average hourly solar generation") +
+  guides(color = guide_legend("Year:")) +
+  ylim(0, 7000)
+plot(___)
+```
+
+
+### Wind generation in 2013 and 2016
+
+Task: Next, we want to create a new plot for average hourly wind generation. There, plot `hour` on the x-Axis again and `mean` on the y-Axis. Furthermore, set the color equal to `year`. Draw boundary points for each hour. Finally, plot your graphic for wind and the solar plot together with the function `grid.arrange()` from the package `gridExtra`. You can conduct the `help()` function. 
+
+
+```{r "5_4"}
+library(gridExtra)
+data_plot_wind <- data_avg %>%
+  filter(source == "wind") %>% 
+  ggplot(aes(x = ___, y = ___)) + 
+  geom_point(aes(color = as.factor(___))) +
+  scale_x_discrete(limits = 1:24) +
+  geom_path(aes(color = as.factor(year))) +
+  theme_minimal()+
+  labs(x="Hour", y="Wind generation in MWh",
+  title="Average hourly wind generation") +
+  guides(color = guide_legend("Year:")) +
+  ylim(0, 7000)
+grid.arrange(data_plot_solar, data_plot_wind, ncol=1)
+```
+
+
+At lunchtime, more precisely at 1 pm, we got the biggest difference in energy generation by solar power. If you think about it, of course, the whole thing makes sense. At noon there is the strongest sunshine, that´s exactly why a higher level of solar capacity can produce the maximum of solar power. Looking at wind generation we have a different view of the changes in electricity production. How big the differences are and in which direction the changes are shifting, we want to look at in the next part.
+
+The plot above shows a lot of differences from the average hourly solar generation. First, we can see, that wind generation never sleeps. There is no time of day where the generation is equal to zero, the reason therefore is, that wind normally never stops blowing. If it´s night, there is no sunshine, but during the whole day, wind is going to blow, even if you hardly feel it. 
+
+
+
+Quiz: At what time is the biggest difference in electricity production by the wind?
+
+[1]: 1am
+[2]: 1pm
+[3]: 9pm
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Daily wind production")
+```
+
+
+A big advantage is that solar and wind balance each other so well. While we got a bigger solar power generation during noon, at midnight, and the late evening hours we also can stretch the wind generation so that we produce the maximum amount of electricity from renewable energies at any time of the day.
+
+### Load in 2013 and 2016
+
+Another interesting point is the electricity demand. Here you can already imagine, that during the early morning hours the demand is very low. The later it gets, the more electricity is needed when people come home from work and need electricity for daily things. Often at 7 or 8 pm most people watch TV or play on their computer, as well as they turn on the light, why the demand will be greatest at these times. Working from the next task, we want to explore if we can confirm our thesis. Here we´re going to repeat the whole plot like in the tasks before but this time we plot the average hourly load on the y-Axis.
+
+Task: Just press check.
+
+
+```{r "5_5"}
+
+data_plot_load <- data_avg %>%
+  filter(source == "load") %>%
+  ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  scale_x_discrete(limits = 1:24) +
+  geom_path(aes(color = as.factor(year))) +
+  theme_minimal() +
+  labs(x="Hour", y="Average hourly caiso load in MWh",
+  title="Average hourly load") +
+  guides(color = guide_legend("Year:"))
+plot(data_plot_load)
+
+```
+
+
+Great! This plot completely confirms our thesis. During early morning hours, people need less energy. At noon the demand grows and of course, at 7 pm we got the global maximum. What we can also recognize is the fact that hourly demand differs only marginally between 2013 and 2016. However, we can´t detect any significant increases or decreases in quantities.
+
+Finally, in this exercise, we want to concentrate on the price and his development. As you surely know in advance, the price always results from supply and demand. The former 3 graphics show the development of the supply from solar and wind power in 2013 and 2016. We have just looked at how demand develops at different times of the day. So, to link these aspects with each other we create this last plot which shows the development of `RTM price`.
+
+
+### Development of the energy price in 2013 and 2016
+
+Creating the same plot as before, you plot `mean` on y-Axis, we keep the rest as well.
+
+
+Quiz: The total price of electricity…?
+
+[1]: increases.
+[2]: remains the same level.
+[3]: falls significantly.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Development of price")
+```
+
+Task: Press check.
+
+
+```{r "5_6"}
+
+data_plot_price <- data_avg %>%
+  filter(source == "price") %>%
+ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  geom_path(aes(color = as.factor(year))) +
+  scale_x_discrete(limits = 1:24) +
+  theme_minimal() +
+  labs(x="Hour", y="Average hourly price in $/MWh",
+  title="Average hourly energy price") + 
+  guides(color = guide_legend("Year:"))
+plot(data_plot_price)
+
+```
+
+
+
+Quiz: What is the main reason for the development of price?
+
+[1]: increasing supply
+[2]: decreasing demand
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Supply and demand")
+```
+
+The plot showed us, that the energy demand is quite on the same level between the years, but we also could see that the supply of energy by solar and wind power increased significantly. So that is the main reason for the falling price. In 2016 at 3 am, 10 am and 11 am the price is on the lowest. On the one hand, we got the lowest energy demand, on the other hand, the wind generation grows at 3 am, as well as the solar generation at 10 am and 11 am. The curve of the development of RTM price has a similar course in 2013 and 2016, nevertheless, in 2016 we have a sharp drop between 9 am and 5 pm. Here again, 2 causes come together: The solar production increases strongly at this time and the electricity demand is even lower than in 2013, which justifies why the electricity price falls so sharply.
+
+To conclude our descriptive part, we would like to briefly discuss what happens in the following part. The next few chapters show us the impacts of wind and solar on price and conventional energy generation. We create (multiple) linear regression models to try to explain the causal effects on how a change of one variable affects the dependent variables. 
+
+
+## Exercise 5 -- First Empirical Model
+
+
+Our goal in this part of the RTutor Problem set is to learn how wind and solar production affects wholesale energy prices. 
+Of course, getting the causal effect is not easy. You have to make many assumptions, adapt the model, and look at dependencies. Nevertheless, we try to get causal effects, by looking at different factors.
+
+### Impacts of solar and wind generation
+
+Before we start with the detailed regression of our multiple linear models, we want to introduce the procedure of linear regression. We start with the following simple linear regression.
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Linear Regression with lm()")
+```
+
+We can write this relationship as a mathematical term with $β_t$ for our coefficients and $ϵ_t$ for the error-term:
+
+$$price_t = \beta_0 + \beta_1solar_t + \varepsilon_t$$
+
+The first task we want to focus on is loading the dataset, where we get a data frame with information on the relationship between price and explanatory variables. 
+After loading and preparing the data frame, we can start with a first linear regression, where we regress `price` on `solar`.
+
+Task: Just press check.
+
+
+```{r "6_2"}
+library(stats)
+data <- readRDS("exercise_5.rds")
+
+reg_1 <- lm(price ~ solar, data = data)
+summary(reg_1)
+```
+
+
+
+Quiz: Watching the first regression, an increase of solar by 1 GWh corresponds to a decrease in price by…?
+
+[1]: 39.01 Dollars/Mwh
+[2]: 1.948 Dollars/Mwh
+[3]: 194.8 Dollars/Mwh
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Results of regression")
+```
+
+When we watch our results, we have to know how to interpret them. At `Coefficients:` are 2 rows for `intercept` and `solar`. There we concentrate on the first column `estimate`. We can say that if no energy is produced by solar power, then we have an energy price of 39.01 dollars. Also, we can say an increase of solar power by 1 GWh corresponds to the fact that the price falls by 1.948 dollars per MWh.
+
+The main reason to control for different variables is, that we want to get the causal effects from solar on price. We have a biased estimator. When we regress price only on solar, then we leave out many factors that have an impact on solar production and the price. 
+Run the following chunk to see this impact as an example of load on solar and price.
+
+Task: Just press check.
+
+
+```{r "6_3"}
+library(DiagrammeR)
+library(webshot)
+grViz('digraph G {
+x [label="solar"]
+y [label="price"]
+z [label="load"]
+x -> y [label="-"];
+z -> x [label="+", dir = both];
+z -> y [label="+"];
+}')
+```
+
+
+
+Quiz: If we control for load the estimator for solar will...?
+
+[1]: increase.
+[2]: decrease.
+[3]: stay at the same level.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Solar and load")
+```
+
+The graphic shows that the load has a positive correlation to price and solar. We can also see that an increase in solar generation corresponds to a decrease in price. If we don´t control for load in this case, the estimator for solar is overestimated. Controlling for load we will get a new estimator for solar which should be smaller.
+In this case, the load is a confounder. What does this mean?
+A confounder is a variable that influences both the dependent variable and independent variable, causing a spurious association. As we already said, the load has a positive correlation with solar generation and has also a correlation with the price. If we don´t control for the variable load, then we ignore the impact of load on price and solar. Controlling for load, we determine exactly this impact on price and solar. If we do not, then the estimator of solar would be overestimated.
+Control variables are always important if you want to find causal effects. That's why we check for several factors in the further course. When we have found all confounders, we can causally interpret our results.
+We want to continue with another linear regression. We regress price on solar and load.
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Stargazer")
+```
+
+
+$$price_t = \beta_0 + \beta_1solar_t + \beta_2load_t + \varepsilon_t$$
+
+Task: Regress `price` on `solar` and `load`. This time save the model in the variable `reg_2`. Set data equal to `data`.
+
+
+```{r "6_5"}
+library(stargazer)
+reg_2 <- lm(___ ~ ___ + ___, data = ___)
+stargazer(reg_1, reg_2, type = "text", title = "Energy price", header=FALSE, dep.var.labels=c("Real-Time-Market Price"),covariate.labels=c("Solar", "Load", "Constant"))
+```
+
+
+Here we now see that the estimator for solar is smaller than in the first regression because we have controlled for the impact of load on price and solar.
+
+Nevertheless, we have to control for some more confounders to get the causal effect of renewable energy generation on the energy price.
+Now, we create the last regression. There again, price is going to be the dependent variable, in addition, solar, wind, load, and gas_price are the explanatory variables. We will also include some more variables to control our model. 
+
+Task: Regress `price` on `solar`, `load`, `wind`, `gas_price`, `rainfall` and 11 indicator variables for each month. Save your results in the variable `reg_3`. Going on, we construct a new table by `stargazer`. Therefore, the first regression belongs to the first column. Regression 2 is shown in the 2nd column, as well as we find model 3 in the last column. Just press check.
+
+
+```{r "6_6"}
+
+reg_3 <- lm(price ~ solar + load + wind + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data)
+stargazer(reg_2, reg_3, type = "text", title = "Price of energy", header=FALSE, dep.var.labels=c("Real-Time-Market Price"), omit = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November"))
+```
+
+
+
+Quiz: Watching the third regression, does the wind have a significantly negative effect on price?
+
+[1]: Yes.
+[2]: No.
+[3]: Can´t be read in the table.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Effects of regressions")
+```
+
+
+Quiz: How can you see that in regression 3 wind has a significant impact on price?
+
+[1]: Behind the estimator are 3 stars.
+[2]: Because the estimator for wind is greater than for solar.
+[3]: Not at all.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Significant effects")
+```
+
+A higher production by wind and solar leads to a lower price level. Furthermore, a higher level of demand and gas price leads to a higher price. We have already shown how large the variation in the price of electricity is for hourly data. Thus, we recognize the impacts of solar and wind production with hourly values on the price, that a higher electricity production by one GWh leads to a price decline of 3.403 dollars per MWh for solar and 5.221 dollars per MWh for wind.
+
+### Impacts of solar and wind generation with daily average of hourly values
+
+But the goal of the authors was to find the long-running impacts of solar and wind production, which is why they take the daily average of hourly produced electricity quantities from wind and solar instead of hourly values as before. 
+In the following, we abbreviate `daily average of hourly` with `DAOH`.
+It´s not detailed explained, why the authors Bushnell and Novan use DAOH values of wind and solar generation. The main aspect is to show the longer-running effect on wholesale energy price, but we don´t know why they continue to use hourly values for the control variables. Nevertheless, we use the authors' model in the further course and analyze the results in detail.
+
+We create a new regression with `mean_solar` and `mean_wind`. The other variables stay the same.
+
+Task: Just press check.
+
+
+```{r "6_7"}
+
+reg_4 <- lm(price ~ mean_solar + load + mean_wind + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data)
+stargazer(reg_3, reg_4, type = "text", title = "Price of energy", header=FALSE, dep.var.labels=c("Real-Time-Market Price"), omit = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November"))
+```
+
+
+
+Quiz: The impact of DAOH solar and wind generation is smaller than the impact of the hourly generation by wind and solar?
+
+[1]: Yes.
+[2]: No.
+[3]: I don´t know.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Impact on price")
+```
+
+Now we could see that an increase of DAOH solar generation by 1 GWh effects that the price decreases by 2.498 dollars per MWh. Also, the increase of DAOH wind generation by 1 GWh leads to a price decrease of 4.006 Dollars/MWh.
+
+After regressing the price on the whole dataset, we want to estimate how the price changes hourly if we increase the solar and wind power generation.
+
+
+
+## Exercise 6 -- Price Change at Different Hours
+
+In this exercise, we focus again on the wholesale electricity price at different times of the day. There, you create a multiple linear regression that shows the dependence of the energy price on the quantity of solar, and wind generation. We control for the load, the rainfall, the gas price, and for each month. 
+
+By selecting and forming all relevant variables we can start the regression. In addition, we want to estimate the following equation:
+
+$$ P_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+Now we start with our regression. We read our dataset `exercise_reg.rds`, save it in the variable data, and load the package `broom`.
+Then, we go on and filter our data for each hour `h` between 1 and 24. We store the filtered values in data_new. Afterward, we create our multiple linear regression as before, with the variables `mean_solar`, `mean_wind`, `load`, and the other control variables. We will set data equal to data_new, so we can create an own regression for every hour of the day. 
+
+Task: We read the dataset `exercise_reg.rds` and save it in data. Then we want to filter the values for hour `h` equal to `10`. For all values of 10 am, we create our linear model and save the regression results in `reg`. Just press check.
+
+
+```{r "7_1"}
+library(broom)
+library(dplyr)
+
+data <- readRDS("exercise_reg.rds")
+h <- 10
+data_new <- data %>%
+    filter(hour == h)
+
+reg <- lm(price ~ mean_solar + mean_wind + load + gas_price + rainfall + January +   February + March + April + May + June + July + August + September + October + November,  data = data_new)  
+summary(reg)
+```
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Variables Definition")
+```
+
+The next step you´re going to do is to use a function, where we can calculate the results of our regression in a tidy form and add the 95% confidence intervals. 
+The function `tidy(reg, conf.int = T)` creates our regressions with confidence intervals. Finally, we want to add a column with the hour of the regression and a variable by which we recognize what kind of values we have: `Hourly` for hourly values and `DAOH` for daily average of hourly values.
+Task: Just press check.
+
+```{r "7_2"}
+x <- tidy(reg, conf.int = T) %>%
+    mutate(hour = as.factor(h), dep_var = "Price", time_effect = "DAOH")
+x
+```
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Custom functions")
+```
+
+We already saw which variables are part of our model. So now, we try to regress it simply. Of course, we need to filter our data by time of day (for the hours 1:24) to get our estimates for each hour. One way could be a `for-loop`, where we filter our dataset by index h for each hour and save the results of all 24 regressions in a data frame. The option we use is to generate a function with the package `broom`. This package contains the method `tidy()`, which provides the results of our lm-regression in a data frame. <a href="https://www.rdocumentation.org/packages/broom/versions/0.7.9" target="_blank">Here</a> you get more information about broom.
+
+Task: While creating our function fun, we filter the dataset data for each hour of the day. Afterward, we regress our model with our filtered dataset. We save the results in a tidy form in x and create two new columns, one for each hour `h` and one for the type of the values. After generating the function, we can call the function by the name fun and create the estimators for our specific regression. But the last step we do is in the next exercise. Just press check.
+
+
+```{r "7_4"}
+
+fun <- function(h) {
+  data_new <- data %>%
+    filter(hour == h)
+  reg <- lm(price ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November,  data = data_new)
+  x <- tidy(reg, conf.int = T) %>%
+    mutate(hour = as.factor(h), dep_var = "Price", time_effect = "DAOH")
+}
+```
+
+
+Task: Now we want to use our generated function fun. Save the results of the regression in the variable `results_reg`. To get them in one data frame, we connect the results for each hour of the day with the function `bind_rows()`. Look at your results with the `head()` and `tail()` command. Just press check again.
+
+
+```{r "7_5"}
+results_reg <- bind_rows(lapply(1:24, fun))
+head(results_reg)
+tail(results_reg)
+```
+
+
+We now want to compare the DAOH effects with the hourly effects. That's why we create the same regression as before again. This time, however, we take solar instead of mean_solar and wind instead of mean_wind as explanatory variables. I have already estimated the two models and saved the results in a common data frame.
+Here you can get a first impression of the results.
+
+Task: Just press check.
+
+```{r "7_6"}
+results_reg<-readRDS("results_regression1.rds")
+head(results_reg)
+tail(results_reg)
+```
+
+
+We can create plots, where we show the values for `beta_solar`, `beta_wind`, or `beta_gasprice` on the y-Axis. We plot the hours 1 to 24 on the x-Axis. Moreover, we draw the 95% confidence intervals for each hour of the day for every estimator of solar, wind, and gas price to see if our estimators are consistent and significant.
+
+### Impact of solar on price
+
+The next step is to visualize the results of the regressions. We will start with the results of the estimations with hourly values. Therefore, we filter our data for term equal to solar to get the betas of hourly solar generation. We plot hour on the x-Axis and the estimators on the y-Axis. Also, we want to draw the confidence intervals. 
+
+Task: Just press check. What can you observe?
+
+```{r "7_7"}
+library(ggplot2)
+library(gridExtra)
+
+plot_hourly <- results_reg %>%
+  filter(term == "solar") %>%
+  ggplot(aes(x = hour, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  scale_x_discrete(breaks = seq(0, 24, 2)) +
+  labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect", subtitle = "By daily average of hourly solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "blue", size=0.5) 
+plot(plot_hourly)
+```
+
+
+Quiz: Which problems can you observe?
+
+[1]: In the evening and night hours we have inaccurate estimators.
+[2]: At noon we have no confidence intervals.
+[3]: I can´t see anything.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("problems of hourly values")
+```
+
+Here, we have the problem, that in the hours between 7 pm and 7 am no solar power is generated, because no sun is shining. If we estimate the model with values very close to 0, we get results that are very inaccurate and with large confidence intervals, but we cannot get meaningful information from them.
+
+That's why we now also filter our data for the time between 8 am and 6 pm to be able to see actual results.
+
+Task: Create the first plot for `solar` and the time between 8 am and 6 pm. Plot `hour` on the x-Axis and `estimate` on the y-Axis. Furthermore, we want a point estimator and a 95% confidence interval for each estimator. Draw a horizontal line in `blue` and set the size equal to `0.5`. Save your plot in `plot_hourly` and show it.
+
+```{r "7_8"}
+ ___ <- results_reg %>%
+   filter(term == "___" & as.numeric(hour) >= 8 & as.numeric(hour) <= 18) %>%
+   ggplot(aes(x = ___, y = ___)) +
+   geom_point() +
+   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+   theme_bw() +
+   ylim(-18, 12) +
+   labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+   title="Hourly price effect", subtitle = "By hourly solar energy (GWh)") +
+   geom_hline(yintercept = 0, color = "blue", size=0.5) 
+plot(plot_hourly)
+```
+
+
+Quiz: An increase of hourly solar generation by 1 GWh at noon reduces the price by?
+
+[1]: 0.5 $/MWh
+[2]: 5.0 $/MWh
+[3]: 2.5 $/MWh
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz(" Impact of hourly solar on price")
+```
+
+The plot shows that an increase of hourly solar generation by 1 GWh decreases the energy price by 2.65 to 6.5 Dollars per MWh between 8 am to 6 pm. This is the time when most solar energy is generated. The increase in hourly solar generation leads to a decrease in energy prices. That´s correct. Furthermore, it is quite obvious, that we have the biggest impact at noon, where we generate the most solar energy. Here, an additional GWh of solar power generates the greatest effect.
+
+Next, we plot both the dependence of `price` on `mean_solar` and the dependence `price` on `solar`. For the hourly solar values, we have mostly no feed-in between 7 pm and 7 am, which is why the estimation results here do not provide any meaningful results. 
+
+Task: We create a second plot for `mean_solar`. We plot `hour` on the x-Axis and `estimate` on the y-Axis. Furthermore, we show a point estimator and a 95% confidence interval for each estimator. Also, we draw a horizontal line in `blue` and set the size equal to `0.5`. We save this plot in `plot_daily`. We show both plots `plot_daily` and `plot_hourly` together with `grid.arrange`. Just press check.
+
+
+```{r "7_9",fig.width=8}
+
+library(gridExtra)
+
+plot_daily <- results_reg %>%
+  filter(term == "mean_solar") %>%
+  ggplot(aes(x = hour, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  ylim(-18, 12) +
+  scale_x_discrete(breaks = seq(0, 24, 2)) +
+  labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect", subtitle = "By daily average of hourly solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "blue", size=0.5) 
+  
+grid.arrange(plot_hourly, plot_daily, nrow=1)
+
+```
+
+
+As before, the left plot shows that an increase of solar generation by 1 GWh decreases the RTM price by around 5 Dollars per MWh between 8 am to 6 pm. The increase in hourly solar generation leads to a decrease in energy prices.
+Compared to the right plot at the same hours, we can see, that the DAOH effects are a bit different. Here we can see a price decrease between 1.56 and 11.72 Dollars/Mwh for one additional generated GWh of daily average of hourly solar. We can also observe that the change of price in the early morning hours, when hardly energy is produced by solar, is close to 0. What is the reason, therefore?
+We can´t exactly explain, why we have this effect. But a possible reason could be, that if we increase DAOH solar generation by 1 GWh, in reality, we increase it by 2 GWh because, if we assume that we have about 12 hours of sunshine, we also know that we do not produce solar power at night in 12 hours. However, we assume daily average of hourly values, i.e. we sum up all hours and take the hourly average. If we now look at the period at noon, where sun shines, we are in the 12 hours with the sun. So, we can say, we take the daily average values, but only replicate it to the 12 hours with the sun. Thus, for example, at lunchtime, we have the effect that a 1 GWh increase affects the price like a 2 GWh increase, which is why we have at this time also the double effect compared to the hourly dates.
+It´s quite difficult to interpret these graphics. The authors just show the right plot in their paper, but they do not explain and interpret a lot. So, it could be said, that we have the same effect in both plots, but it is hard to understand how the effect in the right plot results.
+
+The hours 7 pm to 11 pm in the right plot show us interesting information. We probably think, that when no energy is produced by solar, the price should be hardly influenced by an additional GWh generated energy. But at this time of the day, we can observe, that the price will increase with an additional GWh energy. What is the main reason?
+
+
+Quiz: Why do we have such a price development? Which of the following reason do the authors mention?
+
+[1]: The electricity composition from gas production changes significantly.
+[2]: The estimation results are not significant.
+[3]: Solar power is produced, which we cannot observe.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Late evening hours")
+```
+
+Later, we can see that at this time of the day the composition of the power plants generation will change. In the evening more peak load plants will produce energy to compensate for the drop in solar production. The peak load power plants usually have very high marginal costs and convert only a few resources into electricity, which is why they also have high heat rates. This is precisely why energy is more expensive so that electricity prices are rising.
+We will take a closer look at the relationship between the power plants and the price in task 7.
+
+### Impact of wind on price
+
+Further, we want to show at what time of day wind power and gas price has the greatest effect on the wholesale price. Therefore, we start with wind generation and create a similar plot as before.
+
+Task: Create a plot for `price` as the dependent variable and `wind` respectively `mean_wind` as explanatory variables. Plot `hour` on the x-Axis and `estimate` on the y-Axis. In addition, we want a point estimator and a 95% confidence interval for each estimator. Show a horizontal line in `blue` and set the size equal to `0.5`. Save your plot in `y_plot` and plot your graphic. For more information, use the `help()` function.
+
+
+```{r "7_10",fig.width=8}
+___ <- results_reg %>%
+  filter(term == "wind" | term == "mean_wind") %>%
+  ggplot(aes(x = ___, y = ___)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional wind generation (GWh)", subtitle = "Dependent on wind energy") +
+  geom_hline(yintercept = 0, color = "___", size = 0.5) +
+  facet_wrap(vars(term))
+plot(___)
+```
+
+
+
+Quiz: An increase of hourly wind generation by 1 GWh at noon reduces the price by?
+
+[1]: 0.68 $/MWh
+[2]: 6.8 $/MWh
+[3]: 8.6 $/MWh
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz(" Impact of wind on price")
+```
+
+First of all, we can observe that both curves have a similar course. It is quite interesting that the hourly effects fluctuate less than the daily average of hourly values and also have smaller confidence intervals. The right plot shows that an increase of 1 GWh wind generation leads to a price decrease between 4 and 6 dollars per MWh in the morning hours. At noon and in the afternoon, we can see, that an additional generated GWh by wind leads to a stronger price decrease, nearly 8 Dollars/MWh. The reason, therefore, is, that at noon we have the lowest wind production, which is why an additional GWh wind energy has a stronger effect on price developments. 
+The left graphic shows a similar development of price dependent on wind generation. In the afternoon we have the biggest price decrease if we generate an additional GWh DAOH wind energy (8.69 Dollar/MWh), at this time our wind production increases again, which is why an additional GWh of wind power has a stronger effect on the price. Furthermore, the dependence of the price on wind power also depends on the demand. So, you can see in the midday hours that the price is less impacted by additional wind power because it is precisely here that the demand slowly increases when people come home from work or school.
+
+Again, we can see, that an increase in wind generation reduces the wholesale energy price. The main generation by wind is from 6 pm to 3 am. This time we got confidence intervals that are less far apart. Here, the price is significantly reduced by the increase in electricity production by the wind.
+
+### Longer-running effect of gas price on electricity price
+
+Task: We want to plot the impact of gas price on the wholesale price for every hour of a day. Just press check.
+
+
+```{r "7_11"}
+y_plot <- results_reg %>%
+  filter(term == "gas_price_daily") %>%
+  ggplot(aes(x = hour, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour", y="Change in avg. hourly energy price
+($/MWh)",
+  title="Hourly price effect of a higher gas price ($/Mmbtu)") +
+  geom_hline(yintercept = 0, color = "blue", size = 0.5)
+
+plot(y_plot)
+```
+
+
+
+Quiz: At which time of the day do gas power plants run more frequently?
+
+[1]: 12 pm.
+[2]: 5 pm.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz(" Impact of gas price on wholesale price")
+```
+
+
+
+Quiz: An increase of gas price by 1 $/MMBtu at 6 am increases the price of energy by...?
+
+[1]: 86.6 $/MWh
+[2]: 8.66 $/MWh
+[3]: 8.66 percent
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz(" Higher prices")
+```
+
+If we take a look at this graph, we can see that between 9 am and 3 pm a higher gas price ensures a less strong increase in the price of electricity. 
+The reason is that a lot of solar power is produced at noon, so an increase in gas price has a smaller impact on energy price because we don't have to produce so much electricity by gas. Therefore, we have a strong increase in energy price in the evening hours between 5 pm and 9 pm. 
+On the one hand, this is because in the evening, when people are at home, the demand for electricity increases. On the other hand, more gas energy must be produced to compensate for the low solar power production. As we have already seen, more peak-load power plants generate power with high marginal costs and high heat rates, so that this has an even greater effect on the price increase. 
+We can see in the evening that when the demand for gas increases, the gas price rises, and thus gas electricity is produced more expensively, which is why an increase in the gas price in the evening has a stronger effect on the energy price.
+Summing up the former task, we have already seen that an increase in solar and wind generation leads to a decrease in energy prices. Furthermore, we could see that an increase in the gas price causes an increase in the wholesale electricity price. In the following task, we create a model, where we can see how the generation by power plants is influenced by a higher solar and wind production at different times of the day.
+
+
+
+
+## Exercise 7 -- Impact on Gas Power Plants
+
+In the last exercise, we talked about the higher price in the evening hours by an additional GWh of daily average of hourly solar and wind. Of course, a higher level of electricity production by renewable energies leads to less conventional energy is needed. We should watch, where reductions are made and how our electricity mix is composed of conventional resources. 
+Therefore, we concentrate on three different methods to generate energy by natural gas. The first technology is the CCGT, the combined cycle gas turbine. This source has the lowest heat rate and CO2 emissions comparing the 2 other methods. Also, they have the lowest average marginal cost, but CCGT is designed to run for long periods with generating a high level of output. It is a baseload power plant.
+Thereby, GT, which means gas turbines, have heat rates that are 43 percent higher than CCGT. This feature already shows that GT has significantly higher marginal costs. 
+Steam turbines (ST) complement the other two sources. Here, the energy is recovered from the exhaust gas of the gas turbines by using the steam to drive the steam turbines and generate electricity.
+
+If we try to explain how a higher level of daily average of hourly solar and wind generation affects the change in average generated energy by CCGT, GT, and ST, we have to estimate our basic model 3 times with the same independent variables as before, but this time with CCGT, GT and ST as dependent variables.
+
+We create functions to estimate the linear regression and save it in fun_gt, fun_ccgt, fun_st. Use `gt`, `ccgt` and `st` as dependent variables and `mean_solar`, `mean_wind`, `load`, `gas_price`, `rainfall`, `January`, `February`, `March`, `April`, `May`, `June`, `July`, `August`, `September`, `October` and `November` as independent variables. For the hourly model we use `solar` and `wind` instead of `mean_solar` and `mean_wind`.
+
+
+-  $$ GT_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+-  $$ CCGT_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+-  $$ ST_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+Further on, we estimate our regressions and save all the results in one data frame.
+There, we connect the generated estimators for each hour of the day, which we calculate by the method `lapply()` and our three functions.  
+
+If you want to watch the full code, you can take a look at my replication code on GitHub.
+ 
+In our last exercises, we will focus on the results of our estimates.
+
+### Impact of solar on power plants generation
+
+First of all, we want to look at the impact of an additional GWh of hourly solar on the generation of gas turbines, steam turbines, and the combined cycle gas turbines.
+
+
+Quiz: Which form of energy generation has the largest decrease if we generate an additional GWh of hourly solar?
+
+[1]: CCGT
+[2]: GT
+[3]: ST
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Greater impact")
+```
+
+To get the concrete answer, we will take a look at the following graphic.
+
+Task: Read the file `results_regression3.rds` and save them in the variable `results_reg`. We filter our results for term equal to `solar` and the time between 8 am and 6 pm. Again, we plot `hour` on the x-Axis and `estimate` on the y-Axis. We create a separate plot for every source with `facet_wrap()` and plot our results as lines with the corresponding confidence intervals. Just press check.
+
+
+```{r "8_1",fig.width=10, fig.height=5}
+library(dplyr)
+library(ggplot2)
+results_reg <- readRDS("results_regression3.rds")
+plot_hourly <- results_reg %>%
+  filter(term == "solar" & as.numeric(hour) >= 8 & as.numeric(hour) <= 18) %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Power plant composition effect of additional hourly solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  scale_x_discrete(breaks = seq(0, 24, 2)) +
+  guides(color = guide_legend("Source of conventional energy:")) +
+  facet_wrap(vars(dep_var, time_effect), scales = "free", nrow = 1)
+  plot(plot_hourly)
+```
+
+
+If we focus on the time range between 8 am and 6 pm on this plot, we can see an increase in hourly solar power by 1 GWh leads to a decrease in energy generation by all power plants. We concentrate on the graphic of CCGT (baseload power plant) and GT (peak load power plant). Both show, that an increase in hourly solar leads to a decrease in energy generation by these methods. The impact on GT generation increases during our period. In the early morning hours, we can see that an additional GWh by solar leads to an increase in GT generation because at 8 am we have a low solar generation and we need the peak load power plant to meet the demand, so it leads to an increase in GT generation. Until noon the solar power production increases, which is why peak load power plants can be gradually shut down and thus higher solar production has a greater impact on gas production, as more and more peak load power plants are shut down when the demand is successively covered by solar power.
+With the CCGT it looks a bit different, here we have baseload power plants, which increasingly run when we produce solar power on a consistently low level. CCGT runs normally throughout the whole day but is usually switched off completely when a lot of solar power is produced. This is especially the case in summer, as a constant amount of solar power is produced at noon and the baseload power plants are not needed. So an additional GWh of solar power leads to a sharp decline in CCGT. When no sun is shining in the evening, peak-load power plants are switched on, as they require less time to start up and can be switched on quickly. Of course, you could also reduce the power of CCGT, so they wouldn't have to start from 0. But here we got the problem that they become very inefficient and would cause high costs. That´s why they are more likely to be switched off completely.
+
+
+Again, we create a second plot, to watch the effects of a higher DAOH solar generation. We concentrate on the results and analyze interesting information from the plots.
+
+Task: Create a second plot `plot_solar` with the term equal to `mean_solar`. Plot `hour` on the x-Axis and `estimate` on the y-Axis. As before, we create point estimators, connect them with a line and show the confidence intervals. Finally, show the plot.
+
+
+```{r "8_2",fig.width=10, fig.height=7}
+plot_solar <- results_reg %>%
+  filter(term == "mean_solar") %>%
+  ggplot(aes(x = ___, y = ___, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Power plant composition effect of additional DAOH solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Source of conventional energy:")) 
+plot(plot_solar)
+```
+
+
+
+Quiz: The impact of DAOH solar generation on power plants is higher than the hourly effects?
+
+[1]: Yes.
+[2]: No.
+[3]: Can´t be said.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Solar Effect on Power Plants")
+```
+
+
+Quiz: What do the authors mention, that is the main reason for the strong decrease in CCGT generation?
+
+[1]: Low fixed costs.
+[2]: They are inefficient if they run at low levels.
+[3]: They are quick-start plants.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Decrease of CCGT generation")
+```
+
+Watching the plot, we can observe higher GT generation in the late evening hours if we increase the daily average of hourly solar generation by 1 GWh. We have already explained in the former task that in the evening the peak load power plants start to generate energy, while no solar energy can be produced. These power plants have high marginal costs and high heat rates, which means that they are inefficient. At noon and in the afternoon, we can see, that every one of the 3 methods produces less energy, while we generate an additional GWh of DAOH solar. But it is really interesting, that the combined cycle gas turbines are the most strongly affected. The main reason is, that CCGT is a baseload power plant. They are designed to run for long continuous time ranges. Also, they have relatively high fixed costs and it needs a long time to start and stop these power plants. Furthermore, if the CCGTs run at low levels, they are very inefficient. This means that if they are already running at a low level, and we produce even more solar power, these power plants will become even more inefficient, which is why an additional GWh produced by daily average of hourly solar has such a strong impact.
+If we now know that a lot of solar power is produced at noon and other power plants will be shut down, then it makes sense that an additional GWh of DAOH solar has such a strong effect on the CCGT power plants.
+During the early morning hours, we can see that all power plants are hardly affected by an additional GWh of DAOH solar generation. At this time of the day, we have hardly solar generation, so an increase in solar generation leads to a low decrease in gas power plants because we need these sources to meet the demand as well. At midday, we have the strongest impact on CCGT and the lowest impact on GT. As before, we can say that if we have a lot of solar generation over a long time, we shut down the baseload power plants (CCGT), because it isn´t efficient to run them at a low level. Precisely because we have a very constant high solar production at noon, we can now completely switch off the CCGT. The peak load power plants run mostly in the evening hours, when hardly solar power is produced and only a small number of power plants run at noon, which is why an additional GWh of solar power has a small impact on the GT.
+
+### Impact of wind on power plants generation
+
+
+
+Quiz: Which source of the power plants is strongly impacted by a higher wind production regardless of the time of day?
+
+[1]: CCGT.
+[2]: GT.
+[3]: ST.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Gas generation")
+```
+
+
+
+Quiz: Which of the following reason do the authors mention is most important?
+
+[1]: CCGT is a baseload power plant.
+[2]: Constant wind generation.
+[3]: High demand in the evening.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Reason for this impact")
+```
+
+
+The following plot will show us that an additional GWh of wind generation affects the strongest decrease by CCGT generation. Therefore, we will create a new graphic for `mean_wind` and `wind`. 
+
+
+Task: Going on, we filter our estimates for term equal to `mean_wind` or equal to `wind`. Then we draw up a ggplot with `hour` on the x-Axis and `estimate` on the y-Axis. We also plot our point estimators and the 95% confidence intervals. Furthermore, we connect our specific estimates with a line and draw a black horizontal line on the zero axis. We want to separate our plots into 3 rows. Finally, show your graphics.
+
+
+```{r "8_3",fig.width=10, fig.height=7}
+
+y_plot <- results_reg %>%
+  filter(term == "___" | term == "___") %>%
+  ggplot(aes(x = ___, y = ___, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Power plant composition effect of additional wind generation (GWh)") +
+  geom_hline(yintercept = 0, color = "___", size = 0.6) +
+  scale_x_discrete(breaks = seq(0, 24, 2)) +
+  guides(color = guide_legend("Source of conventional energy:")) +
+  facet_wrap(vars(dep_var, time_effect), scales = "free", nrow = ___)
+plot(y_plot)
+```
+
+
+
+Quiz: In fact, we can observe that .... an additional GWh of wind energy leads to the strongest decrease of GT and ST generation?
+
+[1]: in the night.
+[2]: in the morning hours.
+[3]: at lunchtime.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Decrease of fossil generation")
+```
+
+
+First of all, we want to explain the result of the last question. 
+
+If we concentrate on the former plot, we can observe that in the late evening and night hours an additional GWh of hourly or DAOH wind generation leads to a strong decrease in GT and ST generation. The main reason is that in the evening hours the peak load power plants help to compensate for the lack of solar power generation. If we increase the wind generation by 1 GWh, then we need less generation by GT and ST and we can shut down some power plants because energy by wind is much cheaper than electricity from peak load power plants. So, we can say, GT and ST are needed to be switched on and off in a short time. 
+However, if we now know that high wind generation takes place in the evening hours and that these can be generated at marginal costs close to 0, the peak load power plants can be switched off when we have a high wind generation.
+
+The baseload power plant CCGT is affected equally strongly at any time of the day by higher wind production. Because with higher wind production, the baseload power plants reduce their production and become more inefficient. That's why CCGT is completely shut down and a large part of the power plants do not produce electricity if we generate a constant amount of wind power. Also, these types of power plants cannot be switched on and off as quickly, so they don´t react as fluctuating to an additional GWh of wind power as the peak-load power plants.
+
+In the following tasks, we want to explain how other fossil fuel power plants respond to an increase in wind and solar power.
+
+
+
+
+## Exercise 8 -- Impact of Wind and Solar on Energy Generation
+
+
+Following, we are focused on the impact of a higher level of renewable energy generation on the production of energy by nuclear, thermal, and hydro units as well as net imports. We want to know if we can find a similar course to our gas power plants in exercise 7 and conclude from our graphs which types of power plants are particularly affected by higher wind and solar production. 
+If we view a list of marginal costs of conventional power plants, we can see that nuclear power plants have the lowest marginal costs. Further, hydropower plants also help to compensate for the lack of solar power in the evening and night hours. Therefore, hydroelectric power plants, for example dams, can be switched on especially in the evening and at night to produce electricity and are shut down when the sun is shining. Thermal generators have the highest marginal costs and react most strongly to higher electricity production by renewable energies.
+Imports are needed at a time when demand cannot be met cost-effectively by given capacities. That's why imports are more likely to be needed in the evening hours when demand is high and solar power production is close to 0. At lunchtime, we will see that an additional GWh of solar power leads to a sharp decline in electricity imports.
+
+Again, we create the function `fun` with 4 different dependent variables nuclear, thermal, imports, and hydro. The explanatory variables and the control vector are the same as in the task before. We estimate these four models for each hour of the day. Finally, we will interpret the graphics, and see if we can confirm the assumptions from the introduction of Task 8.
+
+### Models
+
+- $$ Nuclear_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+-  $$ Imports_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+-  $$ Thermal_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+-  $$ Hydro_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+Furthermore, we run our regression and connect them in 1 data frame. The execution of the regressions takes a lot of time, which is why we have executed the regressions in advance and can now read the results directly.
+
+You are welcome to view the code from the building of the models and their estimation on Github.
+
+### Impact of Solar Generation 
+
+In the further course, we read our results from the file `results_regression2.rds` and plot the impact of `mean_solar` (daily average of hourly solar) on the different types of energy generation.
+
+We have our prepared data from the multiple linear regressions so that we can plot our time on the x-Axis from 1 am to 12 pm. Now we represent 4 different lines on the y-Axis. These provide information on how the electricity generation from nuclear power, hydropower, imports, and thermal power changes when electricity generation by DAOH solar power increases by 1 GWh.
+
+
+Quiz: An increase of 1 GWh by DAOH solar leads to the strongest decline in ...?
+
+[1]: Nuclear power
+[2]: Thermal power
+[3]: Net imports
+[4]: Hydropower
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Power plants")
+```
+
+
+Quiz: An increase of 1 GWh by DAOH solar output must not offset 1 GWh of daily output from all other sources?
+
+[1]: I don´t know.
+[2]: Wrong.
+[3]: Right.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Daily power generation")
+```
+
+We will observe these results in the following graph.
+
+Task:  Read the file `results_regression2.rds` and save them in the variable `results_reg`. We filter our results for term equal to `mean_solar`. Here, we plot `hour` on the x-Axis and `estimate` on the y-Axis. We want to display the y-Axis between -1.5 and 0.6. Then, we create a horizontal line in the color `black` and the size `0.6`. Finally, show your graphs.
+
+
+```{r "9_1"}
+library(dplyr)
+library(ggplot2)
+
+
+results_reg <- readRDS("results_regression2.rds")
+
+y_plot <- results_reg %>%
+  filter(term == "___") %>%
+  ggplot(aes(x = ___, y = ___, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  ylim(___, ___) + 
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Energy generation effect", subtitle = "dependent on additional average daily solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "___", size = ___) +
+  guides(color = guide_legend("Source of energy:")) 
+plot(y_plot)
+```
+
+
+
+Quiz: When we have no solar power between 8 pm and 6 am, then the net change in electricity supplied by all other sources must be equal to zero?
+
+[1]: Right.
+[2]: Wrong.
+[3]: Not in this time range.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Power plants during night hours")
+```
+
+The main observation we can see in the plot is, that during the daylight hours when solar generation takes place the generation by thermal and hydroelectric sources falls. Nuclear generation has the lowest marginal costs, that´s why this source is unaffected by increases in solar generation. While nuclear is unaffected in the early and late hours of the day as well, thermal generation falls significantly. So, when we notice that we have no solar generation at night, the supply can only be kept at a constant level by increasing hydro and imports, which the graph shows us. While we know that there is no solar power at night, all other methods of electricity generation together may also produce 0 GWh. For example, at midnight, we have -0.03 GWh for nuclear, -0.21 GWh for thermal, 0.23 GWh for hydro, and 0.03 GWh for imports. If we add this up, we get about 0 GWh.
+At lunchtime, we see exactly the effect we assumed at the beginning. 
+An additional GWh of DAOH solar leads to the largest decline in the power plants with the highest marginal costs, here thermal power plants. At this time of day, we have a large quantity of solar power, so we can shut down the power plants that produce at high marginal costs. Also, we can reduce imports because we can meet our demand cost-optimal with our capacities. 
+
+### Comparison of the hourly and DAOH impact of solar power
+
+Now, we want to focus on the hours, where solar power is generated. We compare the hourly and daily average oh hourly effect of an additional GWh of solar power on our 4 energy sources between 8 am and 6 pm.
+
+Task: Just press check.
+
+
+```{r "9_2",fig.width=10, fig.height=7}
+y_plot <- results_reg %>%
+  filter((term == "mean_solar" | term == "solar") & as.numeric(hour) >= 8 & as.numeric(hour) <= 18) %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Energy generation effect", subtitle = "dependent on additional solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Source of energy:")) +
+  facet_wrap(vars(term, time_effect), scales = "free", nrow = 2)
+plot(y_plot)
+
+```
+
+
+
+Quiz: Which 2 sources have a similar course of the DAOH and hourly curves?
+
+[1]: Thermal and Nuclear.
+[2]: Hydro and Imports.
+[3]: Nuclear and Imports.
+[4]: Hydro and Thermal.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Output by sources")
+```
+
+We already answered the effect between the declines in electricity production by thermal, hydro, nuclear, imports, and additional solar production in the first task. We now want to look at how the curves run in general, where the effect is greater and what could be the reason, therefore.
+
+If we focus on the time range between 8 am and 6 pm on both plots, we can see a similar course for hydro and thermal generation for DAOH solar and hourly solar generation. The effect created by an additional GWh of hourly solar generation is about half less than the effect we created by an additional GWh of average daily solar generation. One reason could be, as we already explained in task 6, that in the plot with the daily average of hourly solar values, we take the average values for the whole day. We know that solar power is generated between 8 am and 6 pm. But the model assumes that we produce electricity all day long. That's why we have no electricity production at night, but only in the 12 hours from morning to evening. In these 12 hours, we get the double effect. So, a 1 GWh increase in solar generation affects the price, as if we actually increased solar production by 2 GWh.
+Between 10 am and 5 pm the nuclear generation is close to zero if we generate an additional GWh of solar power. Here, we have a greater decrease in DAOH effects too. The graphs of the imports run in opposite directions. 
+The reason is that imports don´t produce electricity directly but are rather used when existing capacities are not sufficient to meet the demand. 
+
+### Impact of wind generation
+
+As in the previous tasks, we now want to focus on the impact of higher wind production on the generation by thermal, nuclear, or hydropower plants as well as net imports.
+
+
+Quiz: Which source of the power plants is strongly affected by a higher wind production?
+
+[1]: thermal power plants.
+[2]: hydropower plants.
+[3]: nuclear power plants.
+[4]: net imports.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Wind on conventional")
+```
+
+
+Quiz: At what time does higher wind production have the greatest effect on all sources?
+
+[1]: in the morning hours.
+[2]: in the early afternoon hours.
+[3]: at night.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Wind at different times of day")
+```
+
+Now we want to explain the results of the former quizzes. Therefore, we create 2 new plots which show the impact of an additional GWh of wind (hourly wind and daily average of hourly wind) on the power plants.
+
+Task: Just press check.
+
+
+```{r "9_3",fig.width=10, fig.height=7}
+y_plot <- results_reg %>%
+  filter(term == "mean_wind" | term == "wind") %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Energy generation effect", subtitle = "dependent on additional wind generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Source of energy:")) +
+  facet_wrap(vars(term, time_effect), scales = "free", nrow = 2)
+plot(y_plot)
+
+```
+
+
+Thereby, we can observe that a 1 GWh increase in hourly and DAOH wind generation, at the time where the average generation by wind is low, leads to a smaller decline in electricity production from our power plants here. While we have the highest wind generation at 9 pm and 1 am, our graphs show, that especially thermal and hydro generation decreases the most when wind generation increases by 1 GWh. 
+
+It is quite obvious that the curves don´t fluctuate as much as the curves with the DAOH values of solar production. This is because our wind production is very balanced over the whole day so that an additional GWh of wind has a similar effect on the production of other power plants such as these. Nuclear power plants have the lowest marginal costs and need the longest time to be started (24 to 72 hours). That´s why they are affected the least. Hydropower plants have also very low marginal costs, but they are peak load power plants and can be started very fast. Because of this, they are switched off when less energy is needed. 
+We see the greatest effect with thermal power plants, because these are also peak load power plants, with higher marginal costs and a short start time, so that they are switched off when we have a high wind production. That´s why we observe that an additional GWh produced by wind power has such a strong effect on thermal power generation.
+
+In the next chapter, we will view seasonal effects. Click `Go to next exercise` to continue.
+
+
+
+## Exercise 9 -- Seasonal Effects
+
+Our last central focus of this problem set is seasonal effects. Each task we did before, always considered a whole year. Now, we want to separate a year into 4 quarters spring, summer, autumn, and winter. So, the last exercise will be separated into 2 parts. First, we want to take a look at the development of average solar generation, wind generation, and energy price for every season. We create graphs with the course of the day and then we want to describe where are differences in production and electricity price throughout the day. Furthermore, we take our original model from task 6 and estimate the development of energy price dependent on an additional GWh of wind and solar generation. A difference will be, that we have to filter our data for seasons, and we only control for 2 out of 3 months, instead of 11 out of 12, because we only look at a total of 3 months per quarter. 
+
+### Descriptive analyse of seasonal effects
+
+### Solar generation
+
+Now, we want to start to calculate our average hourly values for solar generation, wind generation, and energy price. 
+We will watch the variables price, solar, and wind for the winter (December to February), spring (March to May), summer (June to August), and autumn (September to November). 
+
+Before we start with the detailed graphics, do you think, that in California more energy is produced in summer, spring, autumn, or winter? 
+
+
+Quiz: Which 2 seasons have the highest average solar generation in 2016?
+
+[1]: Summer and Winter
+[2]: Winter and Spring
+[3]: Summer and Spring
+[4]: Winter and Autumn
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Seasonal solar generation")
+```
+
+To prove this result, let's take a closer look at the data. We create a new plot, where we show the average solar generation for every season and the years between 2013 and 2016. 
+We read our dataset `exercise_season.rds`. Then we group our data by `year`, `hour`, `source`, and `season` and calculate the average values for solar and wind generation, as well as for the energy price. Thereafter, we create a new plot, where we filter our data for the period between 2013 and 2016 and for the solar generation. We plot the hours on the x-Axis and the average solar generation on the y-Axis. Also, we want to have an extra plot for every season with 4 lines for every year of the observations.
+
+Task: Just press check again.
+
+```{r "10_1",fig.width=10, fig.height=8}
+library(ggplot2)
+library(dplyr)
+data <- readRDS("exercise_season.rds")
+
+data_new <- data %>%
+  group_by(year, hour, source, season) %>%
+  summarise(mean = round(mean(value, na.rm=T),2)) 
+
+data_plot <- data_new %>%
+  filter(source == "solar" & year <= 2016) %>%
+  ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  geom_path(aes(color = as.factor(year))) +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  ylim(-0.1, 9) +
+  theme_minimal() +
+  labs(x="Hour", y="Average of hourly solar generation (GWh)",
+  title="Solar generation between 2013 and 2016") +
+  guides(color = guide_legend("Year:")) + 
+  facet_wrap(vars(season), scales = "free")
+plot(data_plot)
+```
+
+
+If we compare the 4 graphics, we can recognize that we have the highest average solar generation in the summer term. Between the years it increased at noon from about 2 GWh to 7.5 GWh in 2016. In every plot we can see that we have some hours (between 8 pm to 6 am) where hardly solar power is produced. Towards noon we see a rise everywhere and to the afternoon and evening hours, our courses fall again. The quantities generated in spring, summer, and autumn are in a range of about 1 GWh per hour. Only in the winter months, we can see that significantly less solar power is generated. If we compare these results to the solar generation in Germany, the conclusions we can make are quite interesting. In California, about 2-thirds of the electricity of the summer months is produced in winter. In Germany, it´s a bit different. Here, the energy production in summer is about 4 times as big as the production in winter. A reason could be that in California the sun shines at a fairly constant level throughout the year and usually at the same times of the day.
+
+### Wind generation
+
+Next, we want to focus on the average hourly wind generation in the years between 2013 and 2016, as well as in the 4 different quarters. We want to create an equal plot as in the former task, but this time we want to show the values of the average hourly wind generation.
+
+
+Quiz: Which 2 seasons have the highest average wind generation in 2013?
+
+[1]: Summer and Winter
+[2]: Winter and Spring
+[3]: Summer and Spring
+[4]: Winter and Autumn
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Seasonal wind generation")
+```
+
+Task: Create a new plot for the wind generation and save it in `data_plot`. We want to filter for the source `wind` and the years between 2013 and 2016. Here you should show `hour` on the x-Axis and `mean` on the y-Axis. We want to limit the y-Axis between `-0.1` and `3.5`. Finally, we separate all into 4 different plots for every season and show our graphs.
+
+```{r "10_2",fig.width=8, fig.height=7}
+
+___ <- data_new %>%
+  filter(source == "___" & year <= ___) %>%
+  ggplot(aes(x = ___, y = ___)) + 
+  geom_point(aes(color = as.factor(year))) +
+  geom_path(aes(color = as.factor(year))) +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  ylim(___, ___) +
+  theme_minimal() +
+  labs(x="Hour", y="Average of hourly wind generation (GWh)",
+  title="Wind generation between 2013 and 2016") +
+  guides(color = guide_legend("Year:")) + 
+  facet_wrap(vars(season), scales = "free")
+plot(data_plot)
+```
+
+
+Like we already have seen in the first part of our descriptive tasks the production of average wind generation has hardly increased. For example, if we look at the graphic for the spring season, we can see, that we have the lowest wind generation in 2015 and the highest in 2013 and 2016. If we compare this with the diagrams from the solar plots, we can say that there has not been much development in capacities here.
+
+In the winter season, we have the lowest and the most constant wind generation distributed throughout the day (between 0.5 and 1 GWh). We can also see that the daily minimum is around 1 GWh at noon in all quarters. Further, in summer we observe, that we have a strong difference between noon with 1 GWh and 1 am with over 3 GWh. In the next part, we will take a closer look at how larger or smaller wind power production affects the energy price.
+
+### Energy price
+
+Finally, we want to know how the electricity price behaves in the different quarters. We do the same procedure as before, looking at the price development over the day and focusing on the years 2013 to 2016 and the different seasons. 
+Again, we would like to know your opinion in advance. In which year and season do we reach the maximum electricity price?
+
+
+Quiz: In which year and season do we reach the maximum electricity price?
+
+[1]: Summer 2016
+[2]: Spring 2014
+[3]: Autumn 2016
+[4]: Winter 2015
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Seasonal energy price")
+```
+
+Now we want to watch if our result from the quiz is correct. Therefore, we generate our new plot with the average energy prices for the years 2013 to 2016 and the seasons` winter, spring, summer, and autumn.
+
+Task: Just press check.
+
+```{r "10_3",fig.width=8, fig.height=7}
+data_plot <- data_new %>%
+  filter(source == "price" & year <= 2016) %>%
+  ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  geom_path(aes(color = as.factor(year))) +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  ylim(-0.1, 100) +
+  theme_minimal() +
+  labs(x="Hour", y="Average hourly energy price ($/MWh)",
+  title="Energy price between 2013 and 2016") +
+  guides(color = guide_legend("Year:")) + 
+  facet_wrap(vars(season), scales = "free")
+plot(data_plot)
+
+```
+
+
+The energy price fluctuates very strongly. Of course, this is because we have many factors that influence the price. We see that in all season´s, we have the highest energy price in 2014. Only a few outliers on evenings in summer and autumn in 2015 and 2016 are above the energy prices in 2014. In general, it can be said that in the evening hours prices always rise sharply, that is because here the demand increases when people come home from work and carry out activities at home. And of course, no solar power can be generated. Except for the evening outliers, we can observe that in all seasons prices fall from year to year, as electricity can be produced more cost-effectively, and the capacities of renewable energies are expanded. 
+If we take a last focus on the seasonal energy prices and concentrate on the year 2016, we can see, that at any time of the day in spring the electricity price is the lowest (between 8 Dollars/MWh at 8 pm and 39.3 Dollars/MWh at 7 pm). As already seen, we have the strongest price fluctuations in summer with 22.2 Dollars/MWh at 9 am and 84.95 Dollars/MWh at 8 pm and in autumn with 16.5 Dollars/MWh at 10 am and 76.4 Dollars/MWh at 6 pm.
+
+### Regression analysis of seasonal effects
+
+We already have watched seasonal effects in our descriptive part. There, we focused on the development of price, wind, and solar generation for summer, autumn, spring, and winter. Now, we are concentrating on the impact of wind and solar energy on the wholesale price for every season of the year. We regress the `RTM Wholesale Price` on `mean_wind`, `mean_solar`, `gas_price` and the control variables `load`, `rainfall` and 2 variables for the `months`.
+It is really important, that we include only 2 of 3 months. If we take all 3 variables for our model, the achieved effect would cancel itself out again.
+
+We create this model for daily average of hourly effects:
+
+-  $$ P_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("seasonal models")
+```
+
+We estimated our regressions, connect the results in 1 data frame, and saved it in `results_regression5.rds`. Task 6 has shown, that in the evening an additional GWh of DAOH solar generation leads to an increase in energy price. Later on, we learned that this effect is the result of higher energy production by gas turbines with high marginal costs and a high heat rate. We could also observe that at lunchtime and in the early afternoon hours an additional GWh of DAOH solar generation leads to the strongest decrease of average hourly energy price because at this time of the day we have the highest solar generation. Thus, we have a supply that is significantly greater than the demand and we see that an additional GWh of electricity leads to a stronger price decrease.
+
+Now that we have repeated the key aspects and results from Task 6, let's consider how it behaves in the individual quarters.
+
+### Impact of solar generation on energy price 
+
+
+Quiz: Do you think we can observe our "evening effect" in every season?
+
+[1]: Yes.
+[2]: No.
+[3]: I don´t know.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Solar in seasons")
+```
+
+
+
+Quiz: In which season leads an additional GWh of electricity to the sharpest price decline?
+
+[1]: Summer.
+[2]: Winter.
+[3]: Spring.
+[4]: Autumn.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Solar in quarters")
+```
+
+Now we want to create a plot, where we show the dependence of average hourly price on the daily average of hourly solar generation. We start to read our data file with the results of the regressions, filter the data for term equal to `mean_solar`, and plot hours on the x-Axis and the estimates on the y-Axis. Going on, we want to show every season in its own plot.
+
+Task: Just press check.
+
+```{r "10_4",fig.width=8, fig.height=7}
+data <- readRDS("results_regression5.rds")
+y_plot <- data %>%
+  filter(term == "mean_solar") %>%
+  ggplot(aes(x = as.numeric(hour), y = estimate, group = season, color = season)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  scale_x_continuous(breaks = seq(0, 24, 2)) +
+  theme_bw() +
+  labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional daily average of hourly solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "darkblue", size = 0.6) +
+  guides(color = guide_legend("Season: ")) +
+  facet_wrap(vars(season), scales = "free", nrow = 2)
+plot(y_plot)
+
+```
+
+
+Quiz: What is a possible reason for the price decrease in the winter by an additional GWh of DAOH solar generation?
+
+[1]: High demand.
+[2]: Energy generation with high marginal costs and low solar generation.
+[3]: Low supply.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Reason for price decrease")
+```
+
+Focusing on our results, we can see that an additional GWh of DAOH solar generation leads to the strongest price decrease in winter, as we already predicted in the quiz before. In general, it can be said that in all seasons, at the time of day between about 8 pm and 6 am, where almost no solar power is generated, here also an additional GWh of solar power has hardly any impact on the electricity price.
+As in task 6, we can observe, that in the early evening hours between 6 pm and 8 pm, an additional GWh of the daily average of hourly solar power leads to the biggest price increase (between 3.72 Dollar/MWh and 15.57 Dollar/MWh). The reason, therefore, is that in the evening, when no solar power is generated, we use the peak-load power plants (GT), which are quite inefficient and have high marginal costs, but they can be started fast to meet the demand.
+
+The last interesting point is at lunchtime in every season. We can watch, that in the summer season, where we have a high solar generation, an additional GWh of solar power has a low impact on the energy price. If we compare it to the winter, where little solar power is produced at noon because there is less sunshine, an additional GWh of electricity has a significantly greater impact on the electricity price.
+What are possible reasons?
+On the one hand, we have a lower solar power production in winter and solar power can generally be produced very cheaply. So if we have almost no solar power, the demand must be met with more expensive conventionally generated electricity. If we now increase solar power production, we can shut down peak-load power plants.
+These power plants usually have high marginal costs, which are transferred to the electricity price, so if we now replace this source of electricity with solar power, this has a direct effect on the average hourly electricity price. Especially in winter, we will see that an additional GWh of solar power leads to a very large decrease in electricity price.
+
+After evaluating the results for solar, we will finally look at how the price behaves depending on wind generation.
+
+### Impact of wind generation on energy price
+
+We will concentrate on the impact of an additional GWh of the daily average of hourly wind generation on the energy price. As we have already done with some previous tasks, we look at the impact of DAOH wind production on the price.
+
+
+Quiz: What do you think, do we have a positive price effect in the evening hours?
+
+[1]: Yes.
+[2]: No.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Wind impact on the price")
+```
+
+After plotting our information, we will see, that in the evening, we have an effect, where a higher wind generation leads to a higher price.
+
+
+Quiz: In which season leads an additional GWh wind to the largest price decrease?
+
+[1]: Summer.
+[2]: Winter.
+[3]: Spring.
+[4]: Autumn
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Effects of wind on price")
+```
+
+We will also observe that an additional wind generation in the summer season at lunchtime leads to the most significant price drop. 
+To confirm our statements, let's take a closer look at our data.
+
+We create a plot to show the effect of DAOH wind on the energy price. Here, we will filter our data for term equal to `mean_wind`. We plot hour on the x-Axis and estimate on the y-Axis. After creating the point estimators and connecting them with a line, we want to add a horizontal line at `0` with the color `darkblue` and the size `0.6`. 
+
+Task: Just press check.
+
+```{r "10_5",fig.width=8, fig.height=7}
+y_plot <- data %>%
+  filter(term == "mean_wind") %>%
+  ggplot(aes(x = as.numeric(hour), y = estimate, group = season, color = season)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = seq(0, 24, 2)) +
+  theme_bw() +
+  labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional wind generation (GWh)") +
+  geom_hline(yintercept = 0, color = "darkblue", size = 0.6) +
+  guides(color = guide_legend("Season:")) +
+  facet_wrap(vars(season), scales = "free", nrow = 2)
+plot(y_plot)
+```
+
+
+Quiz: Why does an additional GWh of wind power lead to a sharp price drop at noon, but a slight price increase in the evening and the season´s summer and spring?
+
+[1]: High wind production at noon and low demand in the evening.
+[2]: High wind production at noon and high demand in the evening.
+[3]: Low wind production at noon and high demand in the evening.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Seasonal effects of the wind generation")
+```
+
+These results are really interesting and show that the price depends also on other variables than wind generation. Of course, we have the biggest price impact in the summer midday and afternoon hours, where the temperatures are high, especially in California. At this time there is hardly any wind. So, an increase in wind generation causes a higher impact on the wholesale price. Another aspect could be, that in winter terms the supply of renewable energies is quite low, which we have already seen in the descriptive part. We can see that in the evening hours, an additional GWh wind is linked to other factors, which leads to this price development. In the evening, for example, peak-load power plants are often switched on, which are inefficient and have high marginal costs, which increases the price. Also, more electricity is needed in the evening, as people are at home, need electricity for everyday work and in the evening when it gets dark, they turn on the lights or watch TV together.
+The spring and autumn seasons have large price fluctuations. Nevertheless, it can be seen that even at the time when less wind power is produced, that an additional GWh of DAOH wind power follows a stronger price decline, because wind power can be produced cheaply and if there is low wind power at this time of the day, an additional GWh has a greater effect on a price decline or a price adaption.
+
+In California, we have hot months with strong sunshine in the summer season. Here we got a higher supply by solar generation and normally a constant generation by conventional fuels. If we increase the wind generation at this time, we will observe the biggest impact in form of a decrease.
+Finally, what we want to take away from the seasonal effects is that we have the strongest impact of an additional solar power GWh in winter and by the wind in summer. In general, the lines balance each other over the year. Thus, we can say that even the annual plots have given a good overview of the seasonal courses.
+
+
+The next exercise shows us how robust our estimators are against curtailments by the state or government.
+
+
+## Exercise 10 -- Robustness Checks for Curtailments
+
+
+Up to this point, we focus on the robustness of our estimates from task 6. We already have controlled for the variables load, gas price, rainfall, and for every month of the year. Nevertheless, there are still some factors that correlate with the error term, one factor could be the curtailment by state, which leads to inaccuracies in the estimates. 
+
+Before we start with our model and the regression results, we want to know, what curtailments mean in connection with power generation. 
+Curtailment is the deliberate reduction in the output of the possible power generation. This means that we could produce more energy by this power plant, but the state intervenes and says that we have to reduce the performance of the power plant. The reason is, that if the power plants run at maximum output, then we have a significantly higher supply than demand. The energy price would decrease, and the power plant owners would be paid a lower electricity price. We could also build some new power lines or storage which leads to high costs. To avoid these problems, the state sets the curtailments to the power plant owners so that they don´t produce more electricity than is needed.
+
+We want to look at how these curtailments now affect our estimators and whether our previous estimators are robust against these curtailments. 
+In comparison to task 6, we extend our model to include these state interventions. Therefore, we take our observations of daily solar and daily wind and add to them the numbers of curtailed solar generation respectively curtailed wind generation. Overall, we now have the potential amount of electricity that could be generated daily by these two variants. Then, we build the mean of the potential quantities of solar and wind generation.
+So, we use our original model and replace the two variables mean_solar and mean_wind with solar_potential and wind_potential, which we calculate as mentioned before. If we get almost the same estimation results as before, we can say that curtailments have no big impact on our model and thus get more robust results.
+
+-  $$ P_{h,d} = \alpha_{h,m} + \beta_h^{s}Solar_d + \beta_h^{w}Wind_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+-  $$ P_{h,d} = \alpha_{h,m} + \beta_h^{s}Solarpotential_d + \beta_h^{w}Windpotential_d + \beta_h^{g}Gasprice_d + \theta_hX_{h,d} + \varepsilon_{h,d} $$
+
+Anyway, we have to modify our estimation a little bit. The dates for curtailed wind and solar are only available from 5/1/2014 to the end of the sample. That´s why we should adapt our original regression as well. For now, we do 2 regressions. The first regression is completely the same as in task 6. The only change we make is to filter the dates for the start date 5/1/2014. The second regression we do is the same regression with our new variable`s solar potential and wind potential. Here we generate the same functions as before, estimate our regressions with lapply(), and link the estimators of the individual hours with bind_rows().
+
+Finally, we connect the estimation results from the original regression with the potential regression to one data frame. In the end, we filter the results once for solar potential or mean solar and once for wind potential or mean wind so that we can create 2 plots in which we graphically show our two models once depending on wind and second depending on solar to see the differences between these models in case there should be significant deviations.
+
+
+
+Quiz: What do you think, are our estimates robust against curtailments?
+
+[1]: Yes.
+[2]: No.
+[3]: I don´t know.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Robustness")
+```
+
+The detailed code for replicating and estimating our models can be found on Github.
+Now we want to plot our 2 lines for solar and solar potential and look if there are significant differences.
+
+Task: Read the dataset `results_regression4.rds` and save it in `results_reg`. Then, you have to create a new plot with the name `plot_solar`. You should filter the dataset for term equal to `mean_solar` or equal to `solar_potential`. We will plot `hour` on x-Axis and `estimate` on y-Axis. Furthermore, we show point estimators, connect them with `geom_line()`, and draw confidence intervals too. We want a horizontal line at `y` equal to `0` in the color `black` and with a size of `0.6`.
+
+```{r "11_1",fig.width=8}
+library(ggplot2)
+___ <- readRDS("___")
+___ <- results_reg %>%
+  filter(term == "___" | term == "___") %>%
+  ggplot(aes(x = ___, y = ___, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional solar generation (GWh)") +
+  geom_hline(yintercept = ___, color = "___", size = ___) +
+  guides(color = guide_legend("Method for estimating the results:"))
+```
+
+
+Again, we create the same plot for `mean_wind` and `wind_potential`. Then, we will plot the two graphics and discuss their contents.
+
+Task: Just press check.
+
+```{r "11_2",fig.width=8}
+plot_wind <- results_reg %>%
+  filter(term == "mean_wind" | term == "wind_potential") %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional wind generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Method for estimating the results:"))
+
+plot(plot_solar)
+plot(plot_wind)
+```
+
+
+Quiz: Where does the line of the original OLS estimate differ more from the point estimators of the regression with the potential values?
+
+[1]: In solar regressions.
+[2]: In wind regressions.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Difference between daily average of hourly and potential values")
+```
+
+
+
+Quiz: The differences are always in the 95% confidence interval?
+
+[1]: Right.
+[2]: Wrong.
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("Differences of estimators in CI")
+```
+
+These results show us that curtailments have no significant impact on the price formation depending on the produced electricity quantities and therefore there are no impacts on the demand on the market through curtailments. Thus, our estimators are robust against these effects, which we naturally wanted to show in this task.
+We have already discussed the exact course of the curves and how it comes to this in detail. The main aspect of this task, that we want to show if there exist any significant discrepancies between the results with the quantities produced and the results with the quantities we could potentially have generated. But we could observe that there is no meaningful bias in the resulting estimates. So, we can say, that our model is robust against interventions by the government.
+
+
+
+
+## Exercise 11 -- Discussion and Conclusion
+
+In this problem set, we analyzed the impact of a higher level of renewable energy production on the generation of conventional sources. Therefore, we focused on dates in California from January 2013 to May 2017. Our descriptive part showed an increase in solar and wind generation, while the conventional methods stayed on a constant level. In exercise 2 we could observe the average hourly quantity supplied by different resources. There, thermal energy and net imports take the biggest share. In task 3, the historical development has shown that conventional production has stagnated or even decreased, whereas renewable energy increased strongly.
+
+Number 4 has shown that at noon was the strongest increase in solar production, whereas in the evening and night hours wind production grew strongly. Our part with the regression analysis provided information on how an additional GWh of electricity produced from wind and solar affects the price on the one hand and conventional electricity generation on the other. 
+We could see a decrease in RTM price if we have an increase of daily solar or wind production by 1 GWh. Especially at noon (solar power) and in the afternoon (wind power) an additional GWh of electricity causes the most significant decline in the price of electricity.
+
+Finally, we could observe, that an increase in wind and solar generation leads to a decline in thermal and hydro production, as well as imports. Only nuclear power production is hardly affected because there we have the lowest marginal costs.
+Task 10 showed that our estimators are also robust against impacts such as curtailments. 
+In this problem set, we only replicated the important and main parts of the working paper. For more detailed information, robustness checks, or seasonal effects take a look at the paper itself. 
+In conclusion, we created equal or very similar results and thus confirm the hypothesis that both the wholesale price and conventional electricity production are affected by the expansion of renewable energies.
+
+Here you can see the collected awards. Press check.
+
+
+```{r "12_1"}
+
+awards()
+```
+
+
+
+## Exercise 12 -- References
+
+### Bibliography
+
+- Andreas, J. (2015): „THE SHALE REVOLUTION IN THE U.S. AND ITS IMPACT ON ENERGY MARKETS, ENERGY SECURITY AND THE U.S. ENERGY TRANSITION“: https://www.researchgate.net/publication/305406439_The_Shale_Revolution_in_the_US_and_its_Impact_on_Energy_Markets_Energy_Security_and_the_US_Energy_Transition, accessed 1.11.2021.
+
+- Buschnell, J. and Novan, K. (2020): „Replication Data for: Setting with the Sun: The impacts of renewable energy on conventional generation“:  https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/6XQZ3L, accessed 1.11.2021.
+
+- Buschnell, J. and Novan, K. (2020): „Setting with the Sun: The impacts of renewable energy on conventional generation.“, Journal of the Association of Environmental and Resource Economists (2021).
+
+- Bushnell, j. et. al. (2008): „Vertical Arrangements, Market Structure, and Competition:
+An Analysis of Restructured US Electricity Markets“: https://www.aeaweb.org/articles?id=10.1257/aer.98.1.237, accessed 1.11.2021.
+
+- Cullen, Joseph. 2013. “Measuring the Environmental Benefits of Wind-Generated Electricity.”
+American Economic Journal: Economic Policy, 5(4): 107–133, accessed 1.11.2021.
+
+- Donner, S. and Faltin, F. (2008): „Klimapolitische Entwicklungen in den USA - Initiativen auf bundesstaatlicher und regionaler Ebene“: https://www.bundestag.de/resource/blob/495208/c60e1eb8e63ccec5769f4b7bba93aede/klimapolitische-entwicklungen-in-den-usa-data.pdf, accessed 1.11.2021.
+
+- Harrell, F. (2020): „Regression Modeling Strategies“: http://hbiostat.org/doc/rms1.pdf, accessed 1.11.2021.
+
+- IER (2019): „POLICY BRIEF The 100 Percent Renewable Energy Myth“: https://www.instituteforenergyresearch.org/wp-content/uploads/2019/02/Renewable-Myth-Policy-Brief219.pdf?__cf_chl_captcha_tk__=pmd_x4b7F3Ir3cifwctBopZ14q6x6h5cvK.Uv2Xdvvyt9lc-1634721873-0-gqNtZGzNAyWjcnBszQkR, accessed 1.11.2021.
+
+- Kugler, F. et. al. (2014): „Ökonometrische Methoden zur Evaluierung kausaler Effekte der Wirtschaftspolitik“: https://www.degruyter.com/document/doi/10.1515/pwp-2014-0013/html, accessed 1.11.2021.
+
+- Marsh, J. (2019): „Behind-the-meter: what you need to know“: https://news.energysage.com/behind-the-meter-overview/, accessed 1.11.2021.
+
+- Pfaud, A. (2020): „Power to Gas – warum eigentlich noch nicht?“: https://www.vgb.org/vgbmultimedia/PT202006PFAUD-p-16186.pdf, accessed 1.11.2021.
+
+- Rudolph, S. (2012): „Marktbasierte Klimapolitik in den USA: "Wind of Change" oder "Blown by the Wind"?“: https://www.econstor.eu/handle/10419/56554, accessed 1.11.2021.
+
+- Schneider, A. et. al. (2010): „Lineare Regressionsanalyse“: https://www.uni-kiel.de/medinfo/lehre/seminare/methodik/Dtsch%20Arztebl%2014%20Lineare%20Regressionsanalyse.pdf, accessed 1.11.2021.
+
+- Sensfuß, Frank, Mario Ragwitz, and Massimo Genoese. 2008. “The merit-order
+effect: A detailed analysis of the price effect of renewable electricity generation on spot market prices in Germany.” Energy policy, 36(8): 3086–3094, accessed 1.11.2021.
+
+- Zeileis, A. (2009): Lineare Modelle in R: Klassische lineare Regression: https://statmath.wu.ac.at/courses/multverf2/tutorien/LiMo1.pdf, accessed 1.11.2021.
+
+
+### R and Packages in R
+
+
+- Auguie, B. and Antonov, A. (2017): gridExtra. " Miscellaneous Functions for "Grid" Graphics", R package version 2.3 https://cran.r-project.org/web/packages/gridExtra/index.html
+
+- Becker, R. et. al. (1988): function. „function: Function Definition“, R package version 3.6.2,   https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/function
+
+- Couch, S. (2021): broom. „broom“, R package version 0.7.9, https://www.rdocumentation.org/packages/broom/versions/0.7.9
+
+- Fabian (2021), ggplot2. „So ändern Sie den Titel der Legende in ggplot2 (mit Beispielen)“, https://statologie.de/legende-titel-ggplot2-r/
+
+- Gohel, D. (2021), officedown. „officedown“, R package version 0.2.3, https://www.rdocumentation.org/packages/officedown/versions/0.2.3
+
+- Gohel, D. (2021), flextable. „flextable“, R package version 0.6.10, https://www.rdocumentation.org/packages/flextable/versions/0.6.10
+
+- Hlavac, M. (2018): stargazer. “Well-Formatted Regression and Summary Statistics Tables”, R package version 5.2.2 http://CRAN.R-project.org/package=stargazer
+
+- Porras, E. (2018), „Linear Regression in R“, https://www.datacamp.com/community/tutorials/linear-regression-R
+
+- Wickham, H. et al. (2020), dplyr. "A Grammar of Data Manipulation", R package version 1.0.7, https://cran.r-project.org/web/packages/dplyr/index.html
+
+- Wickham, H. et al. (2020), ggplot2. "Create Elegant Data Visualisations Using the Grammar of Graphics", R package version 3.3.5, https://cran.r-project.org/web/packages/ggplot2/index.html
+
+- Wickham, H. et. al. (2021), readRDS. „readRDS: Serialization Interface for Single Objects“, R package version 3.6.2, https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/readRDS
+
+- Wickham, H. et. al. (2021) tidyr. „tidyr“, R package version 1.1.3,
+https://tidyr.tidyverse.org/
