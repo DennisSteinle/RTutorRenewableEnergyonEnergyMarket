@@ -1,0 +1,922 @@
+---
+title: "Bachelorarbeit"
+subtitle: "Eine Analyse von Dennis Steinle"
+params:
+  viridis_palette: viridis
+output: 
+  html_document:
+    theme: "cosmo"
+    toc: true
+    toc_float: true
+    keep_md: true
+
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, dpi = 300)
+```
+
+1) First instructions
+
+```{r}
+library(tidyr)
+library(haven)
+library(dplyr)
+library(kableExtra)
+library(stargazer)
+library(rvest)
+library(pander)
+library(rstatix)
+library(lubridate)
+library(broom)
+library(stats)
+library(ggplot2)
+library(gridExtra)
+library(DiagrammeR)
+library(webshot)
+
+
+```
+
+2) Selecting columns and save them for indivual exercises.
+
+```{r}
+
+setwd("C:/Users/stein/OneDrive/Dokumente/GitHub/Bachelorarbeit")
+
+
+data<-read_dta("C:/Users/stein/OneDrive/Dokumente/GitHub/Bachelorarbeit/Setting_Sun_dataset.dta")
+
+exercise3<-data%>%
+  select(daily_solar, daily_wind, solar, wind, renewables, imports, large_hydro, nuclear, thermal, year, month, day)
+names(exercise3) <- c("dailysolar", "dailywind", "solar", "wind", "renewables", "imports", "hydro", "nuclear", "thermal", "year", "month", "day")
+exercise3$date <- with(exercise3, ymd(sprintf('%04d%02d%02d', year, month, day)))
+exercise3<-exercise3%>%
+  mutate(renewable=renewables-solar-wind)
+
+
+exercise4<-data%>%
+  select(solar, wind, load, rtm_total_lmp, year, month, hour)
+names(exercise4) <- c("solar", "wind", "load", "price", "year", "month", "hour")
+exercise4<-exercise4%>%
+  filter(year==2013| year==2016)
+exercise4<-pivot_longer(exercise4, cols = -c("year", "month","hour"), names_to = "source", values_to = "value")
+
+
+exercise6<-data%>%
+  group_by(year, month, day)%>%
+  mutate(mean_solar = mean(solar), mean_wind = mean(wind))%>%
+  ungroup()
+exercise6<-exercise6%>%
+  select(solar, wind, mean_solar, mean_wind, load, rtm_total_lmp, spot, inches_lag, hour, nuclear, imports, thermal, large_hydro, net_load_ccgt_caiso, net_load_gt_caiso, net_load_st_caiso, solar_potential, wind_potential, year, month, day)%>%
+  mutate(mean_wind = mean_wind/1000, mean_solar = mean_solar/1000, load = load/1000, solar = solar/1000, wind = wind/1000, nuclear = nuclear/1000, imports = imports/1000, thermal = thermal/1000, large_hydro = large_hydro/1000, solar_potential = solar_potential/24, wind_potential = wind_potential/24, net_load_ccgt_caiso = net_load_ccgt_caiso/1000 , net_load_gt_caiso = net_load_gt_caiso/1000, net_load_st_caiso = net_load_st_caiso/1000)
+  
+names(exercise6) <- c("solar", "wind", "mean_solar", "mean_wind", "load", "price", "gas_price", "rainfall", "hour","nuclear","imports", "thermal", "hydro", "ccgt", "gt", "st", "solar_potential", "wind_potential", "year", "month", "day")
+exercise_reg<-exercise6%>%
+  mutate(January=ifelse(month==1,1,0), February=ifelse(month==2,1,0),March=ifelse(month==3,1,0),April=ifelse(month==4,1,0),May=ifelse(month==5,1,0),June=ifelse(month==6,1,0),July=ifelse(month==7,1,0),August=ifelse(month==8,1,0),September=ifelse(month==9,1,0),October=ifelse(month==10,1,0),November=ifelse(month==11,1,0),December=ifelse(month==12,1,0), gas_price_daily = gas_price)
+
+
+exercise7<-data%>%
+  group_by(year, month, day)%>%
+  mutate(mean_solar = mean(solar), mean_wind = mean(wind))%>%
+  ungroup()
+exercise7<-exercise7%>%
+  select(mean_solar, mean_wind, load, rtm_total_lmp, spot, inches_lag, hour, nuclear, imports, thermal, large_hydro, net_load_ccgt_caiso, net_load_gt_caiso, net_load_st_caiso, solar, wind, year, month, day)%>%
+  mutate(mean_wind = mean_wind/1000, mean_solar = mean_solar/1000, load = load/1000, solar = solar/1000, wind = wind/1000, nuclear = nuclear/1000, imports = imports/1000, thermal = thermal/1000, large_hydro = large_hydro/1000)
+names(exercise7) <- c("mean_solar", "mean_wind", "load", "price", "gas_price", "rainfall", "hour","nuclear","imports", "thermal", "hydro", "ccgt", "gt", "st", "solar", "wind", "year", "month", "day")
+
+exercise5<-exercise7%>%
+  mutate(January=ifelse(month==1,1,0), February=ifelse(month==2,1,0),March=ifelse(month==3,1,0),April=ifelse(month==4,1,0),May=ifelse(month==5,1,0),June=ifelse(month==6,1,0),July=ifelse(month==7,1,0),August=ifelse(month==8,1,0),September=ifelse(month==9,1,0),October=ifelse(month==10,1,0),November=ifelse(month==11,1,0),December=ifelse(month==12,1,0))
+
+exercise_analyse<-data%>%
+  select(renewables, year, month, day, hour, rtm_total_lmp, spot, load, solar, wind,nuclear, large_hydro, imports, thermal)
+
+names(exercise_analyse) <- c("renewables", "year", "month", "day", "hour", "price", "gas_price", "load", "solar", "wind", "nuclear", "hydro", "imports", "thermal")
+
+
+exercise_analyse$date <- with(exercise_analyse, ymd(sprintf('%04d%02d%02d', year, month, day)))
+exercise_analyse<-exercise_analyse%>%
+  mutate(renewable=renewables-solar-wind)
+```
+
+
+
+3) Exercise 1
+```{r}
+data<-readRDS("exercise_analyse.rds")
+head(data, 10)
+range(data$date)
+nrow(data)
+data_long <- pivot_longer(data, cols = -c(renewables, date, year, month, day, hour, price, gas_price, load), names_to = "source", values_to = "value" )
+
+head(data_long, 12)
+
+table <- data_long %>%
+  group_by(source) %>%
+  summarise(mean = round(mean(value, na.rm=T),2), sd = round(sd(value, na.rm = T),2)) 
+head(table)
+
+
+table %>%
+  kbl(col.names = c("Source",
+                    "Average Hourly Quantity Supplied (MWh)","Standard Deviation (MWh)"), digits = 2,caption = "Hourly Quantity Supplied to CAISO") %>%
+  kable_styling(full_width = T)
+
+```
+
+Task 3:
+```{r}
+data <- readRDS("exercise_3.rds")
+head(data,10)
+
+
+data_info <- data %>%
+  group_by(year, month, day) %>%
+  summarise(mean_solar = mean(solar), mean_wind = mean(wind), date = first(date))
+  
+data_plot <- data_info %>%
+  filter(year == 2013 | year == 2014) %>%
+  ggplot(aes(x = date, y = mean_solar)) + 
+  geom_point(color = "darkblue") +
+  labs(x="January 2013 to December 2014", y="Daily generation in MWh",color="Legend: ",
+  title="Average hourly solar generation") +
+  theme_bw()
+plot(data_plot)
+
+data_plot <- data_info %>%
+  filter(year == 2013 | year == 2014) %>%
+  ggplot(aes(x = date, y = mean_wind)) + 
+  geom_point(color = "green") +
+  labs(x="January 2013 to December 2014", y="Daily generation in MWh",color="Legend: ",
+  title="Average hourly wind generation") +
+  theme_bw()
+plot(data_plot)
+
+
+
+data_long <- pivot_longer(data, cols = -c(renewables, date, year, month, day, dailysolar, dailywind), names_to = "source", values_to = "value" )
+data_long
+
+
+data_plot <- data_long %>%
+  group_by(year, month, source) %>%
+  summarize(
+    date = first(date), 
+    average = mean(value, na.rm=T)
+)
+head(data_plot)
+
+plot <- data_plot %>%
+  ggplot(aes(x = date, y = average)) +
+  geom_line(aes(color = source)) +
+  facet_wrap(vars(source), scales = "free", nrow = 2)
+
+plot(plot)
+
+data_year <- data_long %>%
+  group_by(year, source) %>%
+  summarise(average = mean(value, na.rm = T)) 
+
+head(data_year)  
+
+plot <- data_year %>%
+  ggplot(aes(x = year, y = average)) +
+  geom_col(aes(fill = source)) +
+  facet_wrap(vars(source), scales = "free", nrow = 2)
+
+plot(plot)
+
+```
+
+Task 4:
+
+```{r}
+
+data <- readRDS("exercise_4.rds")
+head(data,10)
+
+data_avg <- data %>%
+  group_by(year, hour, source) %>%
+  summarise(mean = round(mean(value, na.rm = T),2))
+
+data_plot_solar <- data_avg %>%
+  filter(source == "solar") %>%
+ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  scale_x_discrete(limits = 1:24) +
+  geom_path(aes(color = as.factor(year))) +
+  theme_minimal() +
+  labs(x="Hour", y="Solar generation in MWh",
+  title="Average hourly solar generation") +
+  guides(color = guide_legend("Year:")) +
+  ylim(0, 7000)
+plot(data_plot_solar)
+
+
+data_plot_wind <- data_avg %>%
+  filter(source == "wind") %>%
+ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  scale_x_discrete(limits = 1:24) +
+  geom_path(aes(color = as.factor(year))) +
+  theme_minimal()+
+  labs(x="Hour", y="Wind generation in MWh",
+  title="Average hourly wind generation") +
+  guides(color = guide_legend("Year:")) +
+  ylim(0, 7000)
+grid.arrange(data_plot_solar, data_plot_wind, ncol=1)
+
+data_plot_load <- data_avg %>%
+  filter(source == "load") %>%
+ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  scale_x_discrete(limits = 1:24) +
+  geom_path(aes(color = as.factor(year))) +
+  theme_minimal() +
+  labs(x="Hour", y="Average hourly caiso load in MWh",
+  title="Average hourly load") +
+  guides(color = guide_legend("Year:"))
+plot(data_plot_load)
+
+data_plot_price <- data_avg %>%
+  filter(source == "price") %>%
+ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  geom_path(aes(color = as.factor(year))) +
+  scale_x_discrete(limits = 1:24) +
+  theme_minimal() +
+  labs(x="Hour", y="Average hourly price in $/MWh",
+  title="Average hourly RTM price") + 
+  guides(color = guide_legend("Year:"))
+plot(data_plot_price)
+
+
+```
+
+
+
+Task 5:
+
+```{r}
+
+
+
+data<-readRDS("exercise_5.rds")
+
+reg_1 <- lm(price ~ solar, data = data)
+summary(reg_1)
+library(DiagrammeR)
+grViz('digraph G {
+x [label="solar"]
+y [label="price"]
+z [label="load"]
+x -> y [label="-"];
+z -> x [label="+", dir = both];
+z -> y [label="+"];
+}')
+library(stargazer)
+reg_2 <- lm(price ~ solar + load, data = data)
+stargazer(reg_1, reg_2, type = "text", title = "Energy price", header=FALSE, dep.var.labels=c("Real-Time-Market Price"),covariate.labels=c("Solar", "Load", "Constant"))
+
+reg_3 <- lm(price ~ solar + load + wind + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data)
+stargazer(reg_2, reg_3, type = "text", title = "Price of energy", header=FALSE, dep.var.labels=c("Real-Time-Market Price"), omit = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November"))
+
+reg_4 <- lm(price ~ mean_solar + load + mean_wind + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data)
+stargazer(reg_3, reg_4, type = "text", title = "Price of energy", header=FALSE, dep.var.labels=c("Real-Time-Market Price"), omit = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November"))
+
+```
+
+Task 6:
+
+```{r}
+
+data <- readRDS("exercise_reg.rds")
+
+fun <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+    reg <- lm(price ~ mean_solar + mean_wind + load + gas_price_daily + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+    x <- tidy(reg, conf.int = T)%>%
+    mutate(hour = as.factor(h), dep_var = "Price", time_effect = "DAOH")
+}
+
+y_value <- bind_rows(lapply(1:24, fun))
+
+  fun_hour <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+    reg <- lm(price ~ solar + wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+    x <- tidy(reg, conf.int = TRUE)%>%
+    mutate(hour = as.factor(h), dep_var = "Price", time_effect = "Hourly")
+}
+
+y_value_hour <- bind_rows(lapply(1:24, fun_hour))
+y_value_complete<-bind_rows(y_value, y_value_hour)
+
+
+### results of regressions of function fun and fun_hour
+
+y_value<-readRDS("results_regression1.rds")
+
+plot_daily <- y_value %>%
+  filter(term == "mean_solar") %>%
+  ggplot(aes(x = hour, y = estimate)) +
+    geom_point() +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+    theme_bw() +
+    ylim(-15, 12) +
+    labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+   title="Hourly price effect", subtitle = "By average daily solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "blue", size=0.5) 
+
+ 
+ plot_hourly <- y_value %>%
+  filter(term == "solar" & as.numeric(hour) >= 8 & as.numeric(hour) <= 18) %>%
+  ggplot(aes(x = hour, y = estimate)) +
+    geom_point() +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+    theme_bw() +
+   ylim(-15, 12) +
+    labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+   title="Hourly price effect", subtitle = "By hourly solar energy (GWh)") +
+  geom_hline(yintercept = 0, color = "blue", size=0.5) 
+ 
+ grid.arrange(plot_daily, plot_hourly, nrow=1)
+ 
+ 
+ 
+ y_plot <- y_value %>%
+  filter(term == "wind" | term == "mean_wind") %>%
+  ggplot(aes(x = hour, y = estimate)) +
+    geom_point() +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+    theme_bw() +
+    labs(x="Hour", y="Change in avg. hourly price
+($/MWh)",
+   title="Hourly price effect of additional wind generation (GWh)", subtitle = "Dependent on wind energy") +
+  geom_hline(yintercept = 0, color = "blue", size=0.5) +
+   facet_wrap(vars(term))
+ plot(y_plot)
+ 
+
+  
+  y_plot <- y_value %>%
+  filter(term == "gas_price_daily") %>%
+ ggplot(aes(x = hour, y = estimate)) +
+    geom_point() +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+    theme_bw() +
+    labs(x="Hour",y="Change in avg. hourly energy price
+($/MWh)",
+   title="Hourly Price effect of a higher gas price ($/Mmbtu)") +
+  geom_hline(yintercept = 0, color = "blue", size = 0.5)
+  plot(y_plot)
+  
+  
+
+  
+```
+
+Task 7:
+
+
+```{r}
+
+data<-readRDS("exercise_reg.rds")
+
+fun_gt <- function(h) {
+  
+   data_new <- data %>%
+       filter(hour == h)
+reg <- lm(gt ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "GT", time_effect = "DAOH")
+}
+fun_ccgt <- function(h) {
+  
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(ccgt ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "CCGT", time_effect = "DAOH")
+}
+fun_st <- function(h) {
+  
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(st ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "ST", time_effect = "DAOH")
+}
+
+fun_gt_hour <- function(h) {
+  
+   data_new <- data %>%
+       filter(hour == h)
+reg <- lm(gt ~ solar + wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "GT", time_effect = "Hourly")
+}
+fun_ccgt_hour <- function(h) {
+  
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(ccgt ~ solar + wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "CCGT", time_effect = "Hourly")
+}
+fun_st_hour <- function(h) {
+  
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(st ~ solar + wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "ST", time_effect = "Hourly")
+}
+
+y_ccgt<-bind_rows(lapply(1:24, fun_ccgt))
+y_gt<-bind_rows(lapply(1:24, fun_gt))
+y_st<-bind_rows(lapply(1:24, fun_st))
+y_ccgt_hour<-bind_rows(lapply(1:24, fun_ccgt_hour))
+y_gt_hour<-bind_rows(lapply(1:24, fun_gt_hour))
+y_st_hour<-bind_rows(lapply(1:24, fun_st_hour))
+
+y_total<-bind_rows(y_ccgt,y_gt,y_st, y_ccgt_hour,y_gt_hour,y_st_hour)
+saveRDS(y_total, "results_regression3.rds")
+### all these results are saved in results_regression3.rds
+y_total<-readRDS("results_regression3.rds")
+
+plot_daily <- y_total %>%
+  filter(term == "mean_solar") %>%
+ ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+    geom_point() +
+    geom_line() +
+    geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+    theme_bw() +
+    labs(x="Hour",y="Change in generation (GWh)",
+   title="Power plant composition effect of additional solar generation (GWh)") +
+   geom_hline(yintercept = 0, color = "black", size = 0.6) +
+   scale_x_discrete(breaks = seq(0, 24, 2)) +
+   guides(color = guide_legend("Source of conventional energy:")) +
+   facet_wrap(vars(dep_var, time_effect), scales = "free", nrow = 1)
+  plot(plot_daily)
+  
+plot_solar <- y_total %>%
+  filter((term == "solar" | term == "mean_solar") & as.numeric(hour) >= 8 & as.numeric(hour) <= 18) %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour",y="Change in generation (GWh)",
+  title="Power plant composition effect of additional solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Source of conventional energy:")) +
+  facet_wrap(vars(dep_var, time_effect), scales = "free", nrow = 3)
+plot(plot_solar)
+  
+  y_plot <- y_total %>%
+  filter(term == "mean_wind" | term == "wind") %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour",y="Change in generation (GWh)",
+  title="Power plant composition effect of additional wind generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  scale_x_discrete(breaks = seq(0, 24, 2)) +
+  guides(color = guide_legend("Source of conventional energy:")) +
+  facet_wrap(vars(dep_var, time_effect), scales = "free", nrow = 3)
+plot(y_plot)
+  
+  
+```
+
+
+Task 8:
+
+
+```{r}
+
+data<-readRDS("exercise_reg.rds")
+
+fun_n <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(nuclear ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "Nuclear", time_effect = "DAOH")
+}
+
+fun_n_hour <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(nuclear ~ solar + wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "Nuclear", time_effect = "Hourly")
+}
+
+fun_t <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(thermal ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "Thermal", time_effect = "DAOH")
+}
+
+fun_t_hour <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(thermal ~ solar + wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "Thermal", time_effect = "Hourly")
+}
+
+fun_h <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(hydro ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "Hydro", time_effect = "DAOH")
+}
+fun_h_hour <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(hydro ~ solar + wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "Hydro", time_effect = "Hourly")
+}
+
+
+fun_i <- function(h) {
+  
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(imports ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "Imports", time_effect = "DAOH")
+}
+
+fun_i_hour <- function(h) {
+  
+   data_new <- data %>%
+       filter(hour == h)
+     
+reg <- lm(imports ~ solar + wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "Imports", time_effect = "Hourly")
+}
+
+y_nuclear <- bind_rows(lapply(1:24, fun_n))
+y_thermal <- bind_rows(lapply(1:24, fun_t))
+y_hydro <- bind_rows(lapply(1:24, fun_h))
+y_imports <- bind_rows(lapply(1:24, fun_i))
+y_thermal_h <- bind_rows(lapply(1:24, fun_t_hour))
+y_nuclear_h <- bind_rows(lapply(1:24, fun_n_hour))
+y_imports_h <- bind_rows(lapply(1:24, fun_i_hour))
+y_hydro_h <- bind_rows(lapply(1:24, fun_h_hour))
+
+y_total <- bind_rows(y_nuclear, y_thermal, y_hydro, y_imports,y_nuclear_h, y_thermal_h, y_hydro_h, y_imports_h)
+
+### all results are saved in results_regression2.rds
+
+y_total <- readRDS("results_regression2.rds")
+
+y_plot <- y_total %>%
+  filter(term == "mean_solar") %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  ylim(-1.5, 0.6) + 
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Energy generation effect", subtitle = "Dependent on additional average daily solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Source of energy:")) 
+plot(y_plot)
+  
+y_plot <- y_total %>%
+  filter((term == "mean_solar" | term == "solar") & as.numeric(hour) >= 8 & as.numeric(hour) <= 18) %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Energy generation effect", subtitle = "Dependent on additional solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Source of energy:")) +
+  facet_wrap(vars(term, time_effect), scales = "free", nrow = 2)
+plot(y_plot)
+
+y_plot <- y_total %>%
+  filter(term == "mean_wind" | term == "wind") %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  labs(x="Hour", y="Change in generation (GWh)",
+  title="Energy generation effect", subtitle = "Dependent on additional wind generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Source of energy:")) +
+  facet_wrap(vars(term, time_effect), scales = "free", nrow = 2)
+plot(y_plot)
+  
+
+```
+
+
+Task 9:
+
+```{r}
+
+
+
+dat <- readRDS("exercise_reg.rds")
+dat$date <- with(dat, ymd(sprintf('%04d%02d%02d', year, month, day)))
+
+data <- dat %>%
+  filter(date >= "2014-05-01")
+
+fun <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+reg <- lm(price ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "OLS")
+}
+
+
+fun_potential <- function(h) {
+   data_new <- data %>%
+       filter(hour == h)
+reg <- lm(price ~ solar_potential + wind_potential + load + gas_price + rainfall + January + February + March + April + May + June + July + August + September + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), dep_var = "OLS with potential values")
+}
+
+y_ols <- bind_rows(lapply(1:24, fun))
+y_potential <- bind_rows(lapply(1:24, fun_potential))
+y_total <- bind_rows(y_ols, y_potential)
+
+### all results are saved in results_regression4.rds
+
+
+
+y_total <- readRDS("results_regression4.rds")
+
+plot_solar <- y_total %>%
+  filter(term == "mean_solar" | term == "solar_potential") %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour",y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Method for estimating the results: "))
+
+
+plot_wind <- y_total %>%
+  filter(term == "mean_wind" | term == "wind_potential") %>%
+  ggplot(aes(x = hour, y = estimate, group = dep_var, color = dep_var)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  theme_bw() +
+  labs(x="Hour",y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional wind generation (GWh)") +
+  geom_hline(yintercept = 0, color = "black", size = 0.6) +
+  guides(color = guide_legend("Method for estimating the results: "))
+
+plot(plot_solar)
+plot(plot_wind)
+
+
+```
+
+
+Task 10:
+
+```{r}
+
+
+
+data<-readRDS("exercise_reg.rds")
+data_winter<-data%>%
+  filter(month==12 | month == 1 | month ==2) %>%
+  mutate(season = "winter")
+data_spring<-data%>%
+  filter(month>=3 & month <= 5) %>%
+  mutate(season = "spring")
+data_summer<-data%>%
+  filter(month>=6 & month <= 8) %>%
+  mutate(season="summer")
+data_autumn<-data%>%
+  filter(month>=9 & month <= 11)%>%
+  mutate(season="autumn")
+data_new<-bind_rows(data_winter,data_spring,data_summer,data_autumn)
+
+exercise_season<-data_new%>%
+  select(solar, wind, load, price, year, month, hour,season)
+names(exercise_season) <- c("solar", "wind", "load", "price", "year", "month", "hour", "season")
+
+exercise_season<-pivot_longer(exercise_season, cols = -c("year", "month","hour", "season"), names_to = "source", values_to = "value")
+
+
+data <- readRDS("exercise_season.rds")
+
+data_new <- data %>%
+  group_by(year, hour, source, season) %>%
+  summarise(mean = round(mean(value, na.rm=T),2)) 
+
+data_plot <- data_new %>%
+  filter(source == "solar" & year <= 2016) %>%
+  ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  geom_path(aes(color = as.factor(year))) +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  ylim(-0.1, 9) +
+  theme_minimal() +
+  labs(x="Hour", y="Average hourly solar generation (GWh)",
+  title="Average hourly solar generation between 2013 and 2016") +
+  guides(color = guide_legend("Year:")) + 
+  facet_wrap(vars(season), scales = "free")
+plot(data_plot)
+
+data_plot <- data_new %>%
+  filter(source == "wind" & year <= 2016) %>%
+  ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  geom_path(aes(color = as.factor(year))) +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  ylim(-0.1, 3.5) +
+  theme_minimal() +
+  labs(x="Hour", y="Average hourly wind generation (GWh)",
+  title="Average hourly wind generation between 2013 and 2016") +
+  guides(color = guide_legend("Year:")) + 
+  facet_wrap(vars(season), scales = "free")
+plot(data_plot)
+
+data_plot <- data_new %>%
+  filter(source == "price" & year <= 2016) %>%
+  ggplot(aes(x = hour, y = mean)) + 
+  geom_point(aes(color = as.factor(year))) +
+  geom_path(aes(color = as.factor(year))) +
+  scale_x_discrete(breaks = seq(1, 24, 2)) +
+  ylim(-0.1, 100) +
+  theme_minimal() +
+  labs(x="Hour", y="Average hourly energy price ($/MWh)",
+  title="Average hourly energy price between 2013 and 2016") +
+  guides(color = guide_legend("Year:")) + 
+  facet_wrap(vars(season), scales = "free")
+plot(data_plot)
+
+
+fun_wint <- function(h) {
+   data_new <- data_winter %>%
+       filter(hour == h)
+reg <- lm(price ~ mean_solar + mean_wind + load + gas_price + rainfall + January + February, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), season = "Winter", time_effect = "DAOH")
+}
+fun_sum <- function(h) {
+   data_new <- data_summer %>%
+     filter(hour == h)
+reg <- lm(price ~ mean_solar + mean_wind + load + gas_price + rainfall + July + August, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), season = "Summer", time_effect = "DAOH")
+}
+fun_spring <- function(h) {
+   data_new <- data_spring %>%
+       filter(hour == h)
+reg <- lm(price ~ mean_solar + mean_wind + load + gas_price + rainfall + March + April, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), season = "Spring", time_effect = "DAOH")
+}
+fun_autumn <- function(h) {
+   data_new <- data_autumn %>%
+       filter(hour == h)
+reg <- lm(price ~ mean_solar + mean_wind + load + gas_price + rainfall + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), season = "Autumn", time_effect = "DAOH")
+}
+
+fun_wint_hour <- function(h) {
+   data_new <- data_winter %>%
+       filter(hour == h)
+reg <- lm(price ~ solar + wind + load + gas_price + rainfall + January + February, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), season = "Winter", time_effect = "Hourly")
+}
+
+fun_sum_hour <- function(h) {
+   data_new <- data_summer %>%
+       filter(hour == h)
+reg <- lm(price ~ solar + wind + load + gas_price + rainfall + July + August, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), season = "Summer", time_effect = "Hourly")
+}
+fun_spring_hour <- function(h) {
+   data_new <- data_spring %>%
+       filter(hour == h)
+reg <- lm(price ~ solar + wind + load + gas_price + rainfall + March + April, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), season = "Spring", time_effect = "Hourly")
+}
+
+fun_autumn_hour <- function(h) {
+   data_new <- data_autumn %>%
+       filter(hour == h)
+reg <- lm(price ~ solar + wind + load + gas_price + rainfall + October + November, data = data_new)
+x <- tidy(reg, conf.int = T)%>%
+  mutate(hour = as.factor(h), season = "Autumn", time_effect = "Hourly")
+}
+
+y_winter <- bind_rows(lapply(1:24, fun_wint))
+y_spring <- bind_rows(lapply(1:24, fun_spring))
+y_summer <- bind_rows(lapply(1:24, fun_sum))
+y_autumn <- bind_rows(lapply(1:24, fun_autumn))
+y_winter_hour <- bind_rows(lapply(1:24, fun_wint_hour))
+y_spring_hour <- bind_rows(lapply(1:24, fun_spring_hour))
+y_summer_hour <- bind_rows(lapply(1:24, fun_sum_hour))
+y_autumn_hour <- bind_rows(lapply(1:24, fun_autumn_hour))
+y_total <- bind_rows(y_winter, y_spring, y_summer, y_autumn, y_winter_hour, y_spring_hour, y_summer_hour, y_autumn_hour)
+
+### all results are saved in results_regression5.rds
+
+data <- readRDS("results_regression5.rds")
+y_plot <- data %>%
+  filter(term == "mean_solar") %>%
+  ggplot(aes(x = as.numeric(hour), y = estimate, group = season, color = season)) +
+  geom_point() +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), alpha = .6) +
+  scale_x_continuous(breaks = seq(0, 24, 2)) +
+  theme_bw() +
+  labs(x="Hour",y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional average daily solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "darkblue", size = 0.6) +
+  guides(color = guide_legend("Season: ")) +
+  facet_wrap(vars(season), scales = "free", nrow = 2)
+plot(y_plot)
+
+
+y_plot <- data %>%
+  filter((term == "solar" | term == "mean_solar") & as.numeric(hour) >= 8 & as.numeric(hour) <= 18) %>%
+  ggplot(aes(x = as.numeric(hour), y = estimate, group = time_effect, color = time_effect))+
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = seq(0, 24, 2)) +
+  theme_bw() +
+  labs(x="Hour",y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional solar generation (GWh)") +
+  geom_hline(yintercept = 0, color = "darkblue", size = 0.6) +
+  guides(color = guide_legend("Season: ")) +
+  facet_wrap(vars(season), scales = "free", nrow = 2)
+plot(y_plot)
+ 
+y_plot <- data %>%
+  filter(term == "mean_wind" | term == "wind") %>%
+  ggplot(aes(x = as.numeric(hour), y = estimate, group = time_effect, color = time_effect)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = seq(0, 24, 2)) +
+  theme_bw() +
+  labs(x="Hour",y="Change in avg. hourly price
+($/MWh)",
+  title="Hourly price effect of additional wind generation (GWh)") +
+  geom_hline(yintercept = 0, color = "darkblue", size = 0.6) +
+  guides(color = guide_legend("Season: ")) +
+  facet_wrap(vars(season), scales = "free", nrow = 2)
+plot(y_plot)
+  
+```
+
+
+
